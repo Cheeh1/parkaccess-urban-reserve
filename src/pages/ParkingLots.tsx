@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import MainLayout from '@/components/layout/MainLayout';
@@ -7,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
 import { Calendar, Clock, Filter, MapPin, Car, Accessibility, Wifi, Coffee, Shield, Star, ChevronDown, ChevronUp, SortAsc, SortDesc } from 'lucide-react';
+import { Search } from "lucide-react";
 
 // Mock data for parking lots
 const mockParkingLots = [

@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Car, Calendar, MapPin, Clock, CreditCard, File, Star } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 // The reservations prop should be split outside for re-use; we'll keep mock here for component demo
 interface Reservation {
@@ -21,8 +22,17 @@ interface ReservationsSectionProps {
 }
 
 const ReservationsSection = ({ reservations }: ReservationsSectionProps) => {
+  const navigate = useNavigate();
   const upcomingReservations = reservations.filter(res => res.status === 'upcoming');
   const pastReservations = reservations.filter(res => res.status === 'completed');
+
+  const handleBookNow = () => {
+    navigate('/parking-lots');
+  };
+  
+  const handleReservationCheckout = (reservation: Reservation) => {
+    navigate('/checkout', { state: { reservation } });
+  };
 
   return (
     <div>
@@ -39,7 +49,7 @@ const ReservationsSection = ({ reservations }: ReservationsSectionProps) => {
               <h3 className="mt-2 text-lg font-medium text-gray-900">No upcoming reservations</h3>
               <p className="mt-1 text-gray-500">You don't have any parking reservations scheduled.</p>
               <div className="mt-6">
-                <Button onClick={() => window.location.href = '/parking-lots'}>
+                <Button onClick={handleBookNow}>
                   Find Parking
                 </Button>
               </div>
@@ -83,7 +93,11 @@ const ReservationsSection = ({ reservations }: ReservationsSectionProps) => {
                           <File className="h-4 w-4 mr-1" />
                           View E-Ticket
                         </Button>
-                        <Button variant="outline" size="sm" className="text-red-600 border-red-200 hover:bg-red-50">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="text-red-600 border-red-200 hover:bg-red-50"
+                        >
                           Cancel
                         </Button>
                       </div>

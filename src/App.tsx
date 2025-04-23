@@ -12,6 +12,7 @@ import SignUp from "./pages/SignUp";
 import Dashboard from "./pages/Dashboard";
 import CompanyLogin from "./pages/CompanyLogin";
 import CompanyDashboard from "./pages/CompanyDashboard";
+import Checkout from "./pages/Checkout";
 import NotFound from "./pages/NotFound";
 
 // Create a client
@@ -33,6 +34,7 @@ const App = () => {
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/company-login" element={<CompanyLogin />} />
               <Route path="/company-dashboard" element={<CompanyDashboard />} />
+              <Route path="/checkout" element={<Checkout />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

@@ -10,6 +10,8 @@ import ParkingLots from "./pages/ParkingLots";
 import Login from "./pages/Login";
 import SignUp from "./pages/SignUp";
 import Dashboard from "./pages/Dashboard";
+import CompanyLogin from "./pages/CompanyLogin";
+import CompanyDashboard from "./pages/CompanyDashboard";
 import NotFound from "./pages/NotFound";
 
 // Create a client
@@ -29,6 +31,8 @@ const App = () => {
               <Route path="/login" element={<Login />} />
               <Route path="/sign-up" element={<SignUp />} />
               <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/company-login" element={<CompanyLogin />} />
+              <Route path="/company-dashboard" element={<CompanyDashboard />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

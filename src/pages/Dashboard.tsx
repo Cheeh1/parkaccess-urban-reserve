@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import MainLayout from '@/components/layout/MainLayout';
 import DashboardSidebar from '@/components/dashboard/DashboardSidebar';
@@ -23,7 +24,7 @@ const reservations = [
     startTime: '09:00',
     endTime: '12:00',
     totalPrice: 1500,
-    status: 'upcoming',
+    status: 'upcoming' as 'upcoming',
   },
   {
     id: 'res2',
@@ -33,7 +34,7 @@ const reservations = [
     startTime: '13:00',
     endTime: '15:00',
     totalPrice: 600,
-    status: 'upcoming',
+    status: 'upcoming' as 'upcoming',
   },
   {
     id: 'res3',
@@ -43,7 +44,7 @@ const reservations = [
     startTime: '17:00',
     endTime: '20:00',
     totalPrice: 1200,
-    status: 'completed',
+    status: 'completed' as 'completed',
   },
   {
     id: 'res4',
@@ -53,7 +54,7 @@ const reservations = [
     startTime: '10:00',
     endTime: '14:00',
     totalPrice: 2800,
-    status: 'completed',
+    status: 'completed' as 'completed',
   },
 ];
 

@@ -22,7 +22,7 @@ const Index = () => {
   return (
     <MainLayout>
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-r from-parking-primary to-parking-secondary text-white pt-16 pb-32">
+      <section className="relative bg-gradient-to-r from-parking-primary to-parking-secondary text-white pt-16 pb-48 md:pb-32">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center md:text-left md:w-3/5">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
@@ -52,8 +52,8 @@ const Index = () => {
         </div>
         
         {/* Search Card */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-          <Card className="absolute left-0 right-0 -bottom-24 rounded-xl shadow-xl overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20">
+          <Card className="mt-12 md:mt-16 rounded-xl shadow-xl overflow-hidden">
             <CardContent className="p-6">
               <form onSubmit={handleSearch} className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="space-y-2">

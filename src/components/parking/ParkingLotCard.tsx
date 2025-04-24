@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
@@ -26,6 +25,26 @@ interface ParkingLotCardProps {
 
 const ParkingLotCard = ({ lot, getAvailabilityClass }: ParkingLotCardProps) => {
   const navigate = useNavigate();
+
+  const handleReserve = () => {
+    const currentDate = new Date().toISOString().split('T')[0];
+    const currentTime = new Date().toLocaleTimeString('en-US', { 
+      hour: '2-digit', 
+      minute: '2-digit',
+      hour12: false 
+    });
+    
+    const reservation = {
+      parkingLotName: lot.name,
+      spotId: `A-${Math.floor(Math.random() * 100)}`,
+      date: currentDate,
+      startTime: currentTime,
+      endTime: '23:59',
+      totalPrice: lot.price,
+    };
+
+    navigate('/checkout', { state: { reservation } });
+  };
 
   return (
     <Card className="parking-card overflow-hidden">
@@ -105,7 +124,7 @@ const ParkingLotCard = ({ lot, getAvailabilityClass }: ParkingLotCardProps) => {
                 <p className="text-gray-500 text-xs mt-1">{lot.distance} away</p>
               </div>
               <Button 
-                onClick={() => navigate(`/parking-lot/${lot.id}`)}
+                onClick={handleReserve}
                 className="bg-parking-secondary hover:bg-parking-primary"
               >
                 Reserve

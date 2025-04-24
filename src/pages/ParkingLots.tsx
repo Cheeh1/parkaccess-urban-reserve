@@ -5,8 +5,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
-import { Calendar, Clock, Filter, MapPin, Car, Accessibility, Wifi, Coffee, Shield, Star, ChevronDown, ChevronUp, SortAsc, SortDesc } from 'lucide-react';
+import { Calendar, Clock, Filter, MapPin, Car, Accessibility, Wifi, Coffee, Shield, Star, ChevronDown, ChevronUp } from 'lucide-react';
 import { Search } from "lucide-react";
+import ParkingMap from '@/components/parking/ParkingMap';
 
 // Mock data for parking lots
 const mockParkingLots = [
@@ -424,9 +425,14 @@ const ParkingLots = () => {
             </Card>
           </div>
           
-          {/* Results list */}
+          {/* Results list and map */}
           <div className="lg:w-3/4">
             <h2 className="text-2xl font-bold mb-4">Available Parking Lots</h2>
+            
+            {/* Add Map */}
+            <div className="mb-6">
+              <ParkingMap locations={filteredLots} />
+            </div>
             
             {filteredLots.length === 0 ? (
               <div className="text-center py-8">

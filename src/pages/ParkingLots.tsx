@@ -6,7 +6,6 @@ import { Filter, ChevronDown, ChevronUp } from 'lucide-react';
 import ParkingSearch from '@/components/parking/ParkingSearch';
 import ParkingFilters from '@/components/parking/ParkingFilters';
 import ParkingLotCard from '@/components/parking/ParkingLotCard';
-import ParkingLocationMap from '@/components/parking/ParkingLocationMap';
 import { mockParkingLots, ParkingLot } from '@/utils/parkingData';
 
 const ParkingLots = () => {
@@ -23,7 +22,6 @@ const ParkingLots = () => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [sortOption, setSortOption] = useState('distance');
   
-  // Filter states
   const [priceRange, setPriceRange] = useState([0, 1000]);
   const [minDistance, setMinDistance] = useState(0);
   const [maxDistance, setMaxDistance] = useState(5);
@@ -101,7 +99,6 @@ const ParkingLots = () => {
   const getCentralCoordinates = (): [number, number] => {
     if (filteredLots.length === 0) return [4.5418, 8.5433]; // Default coordinates
     
-    // Calculate the average of all coordinates
     const sumLng = filteredLots.reduce((sum, lot) => {
       return sum + (4.5418 + (parseInt(lot.id) * 0.002));
     }, 0);
@@ -129,7 +126,6 @@ const ParkingLots = () => {
         />
         
         <div className="flex flex-col lg:flex-row gap-6">
-          {/* Filter toggle (mobile) */}
           <div className="w-full mb-4 lg:hidden">
             <Button 
               onClick={() => setIsFilterOpen(!isFilterOpen)} 
@@ -144,7 +140,6 @@ const ParkingLots = () => {
             </Button>
           </div>
           
-          {/* Filters sidebar */}
           <div className={`lg:w-1/4 ${isFilterOpen ? 'block' : 'hidden'} lg:block`}>
             <ParkingFilters
               priceRange={priceRange}
@@ -162,21 +157,8 @@ const ParkingLots = () => {
             />
           </div>
           
-          {/* Results list and map */}
           <div className="lg:w-3/4">
             <h2 className="text-2xl font-bold mb-4">Available Parking Lots</h2>
-            
-            <div className="mb-6 h-64">
-              {filteredLots.length > 0 && (
-                <ParkingLocationMap 
-                  location={{
-                    name: "Parking Lots Overview",
-                    address: location || "Selected Area",
-                    coordinates: getCentralCoordinates()
-                  }}
-                />
-              )}
-            </div>
             
             {filteredLots.length === 0 ? (
               <div className="text-center py-8">

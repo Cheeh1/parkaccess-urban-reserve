@@ -1,8 +1,8 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { MapPin, Calendar, Clock, Car } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface ParkingLotSummaryProps {
   reservation: {
@@ -13,9 +13,11 @@ interface ParkingLotSummaryProps {
     endTime: string;
     totalPrice: number;
   };
+  showPaymentButton?: boolean;
+  onPaymentClick?: () => void;
 }
 
-const ParkingLotSummary = ({ reservation }: ParkingLotSummaryProps) => {
+const ParkingLotSummary = ({ reservation, showPaymentButton = false, onPaymentClick }: ParkingLotSummaryProps) => {
   return (
     <Card>
       <CardHeader>
@@ -58,6 +60,15 @@ const ParkingLotSummary = ({ reservation }: ParkingLotSummaryProps) => {
             <span>Total</span>
             <span>₦{reservation.totalPrice}</span>
           </div>
+          
+          {showPaymentButton && (
+            <Button 
+              onClick={onPaymentClick}
+              className="w-full mt-4"
+            >
+              Pay ₦{reservation.totalPrice}
+            </Button>
+          )}
         </div>
       </CardContent>
     </Card>

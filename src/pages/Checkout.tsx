@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import MainLayout from '@/components/layout/MainLayout';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,7 +8,6 @@ import CheckoutSuccess from '@/components/checkout/CheckoutSuccess';
 import ParkingLotSummary from '@/components/checkout/ParkingLotSummary';
 import { useLocation, useNavigate } from 'react-router-dom';
 
-// Define the reservation data type
 interface ReservationData {
   parkingLotName: string;
   spotId: string;
@@ -29,7 +27,6 @@ const Checkout = () => {
   const location = useLocation();
   const navigate = useNavigate();
   
-  // Get reservation data from location state or use default
   const reservationData: ReservationData = location.state?.reservation || {
     parkingLotName: 'Sample Parking Lot',
     spotId: 'A-15',
@@ -54,6 +51,10 @@ const Checkout = () => {
   
   const handleFinish = () => {
     navigate('/dashboard');
+  };
+  
+  const handleProceedToPayment = () => {
+    setStep('payment');
   };
   
   return (
@@ -110,7 +111,11 @@ const Checkout = () => {
           </div>
           
           <div className="lg:sticky lg:top-6 h-fit">
-            <ParkingLotSummary reservation={reservationData} />
+            <ParkingLotSummary 
+              reservation={reservationData} 
+              showPaymentButton={step === 'car-details'} 
+              onPaymentClick={handleProceedToPayment}
+            />
           </div>
         </div>
       </div>

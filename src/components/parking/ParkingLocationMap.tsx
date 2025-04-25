@@ -7,18 +7,15 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { AlertCircle } from 'lucide-react';
 
-interface ParkingLocation {
-  id: string;
-  name: string;
-  address: string;
-  coordinates?: [number, number];
+interface ParkingLocationMapProps {
+  location: {
+    name: string;
+    address: string;
+    coordinates: [number, number];
+  };
 }
 
-interface ParkingMapProps {
-  locations: ParkingLocation[];
-}
-
-const ParkingMap = ({ locations }: ParkingMapProps) => {
+const ParkingLocationMap = ({ location }: ParkingLocationMapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const { toast } = useToast();
@@ -27,7 +24,6 @@ const ParkingMap = ({ locations }: ParkingMapProps) => {
   const [tokenError, setTokenError] = useState<string | null>(null);
 
   const validateToken = (token: string): boolean => {
-    // Verify the token starts with "pk." as required by Mapbox GL for public tokens
     return token.startsWith('pk.');
   };
 
@@ -44,7 +40,6 @@ const ParkingMap = ({ locations }: ParkingMapProps) => {
       return;
     }
     
-    // Valid token, proceed
     setTokenError(null);
     localStorage.setItem('mapbox_token', mapboxToken);
     setIsTokenSet(true);
@@ -58,14 +53,12 @@ const ParkingMap = ({ locations }: ParkingMapProps) => {
   const initializeMap = () => {
     if (!mapContainer.current || !mapboxToken) return;
 
-    // Validate token before using
     if (!validateToken(mapboxToken)) {
       setTokenError('Invalid token format. Mapbox GL requires a public access token (starting with pk.)');
       setIsTokenSet(false);
       return;
     }
 
-    // Set token and initialize map
     mapboxgl.accessToken = mapboxToken;
     
     if (map.current) return;
@@ -74,32 +67,23 @@ const ParkingMap = ({ locations }: ParkingMapProps) => {
       map.current = new mapboxgl.Map({
         container: mapContainer.current,
         style: 'mapbox://styles/mapbox/streets-v12',
-        center: [4.5418, 8.5433], // Center on Ilorin
-        zoom: 12,
+        center: location.coordinates,
+        zoom: 15,
       });
 
-      // Add navigation controls
       map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
 
-      // Add markers for each location
-      locations.forEach((location) => {
-        // For demo, generate random coordinates around Ilorin if not provided
-        const coordinates = location.coordinates || [
-          4.5418 + (Math.random() - 0.5) * 0.1,
-          8.5433 + (Math.random() - 0.5) * 0.1
-        ];
+      const popup = new mapboxgl.Popup({ offset: 25 })
+        .setHTML(`
+          <strong>${location.name}</strong>
+          <p>${location.address}</p>
+        `);
 
-        const popup = new mapboxgl.Popup({ offset: 25 })
-          .setHTML(`
-            <strong>${location.name}</strong>
-            <p>${location.address}</p>
-          `);
+      new mapboxgl.Marker()
+        .setLngLat(location.coordinates)
+        .setPopup(popup)
+        .addTo(map.current);
 
-        new mapboxgl.Marker()
-          .setLngLat(coordinates)
-          .setPopup(popup)
-          .addTo(map.current!);
-      });
     } catch (error) {
       console.error('Error initializing map:', error);
       setTokenError('Error initializing map. Please check your token.');
@@ -108,7 +92,6 @@ const ParkingMap = ({ locations }: ParkingMapProps) => {
     }
   };
 
-  // Clear token and reset form
   const handleReset = () => {
     localStorage.removeItem('mapbox_token');
     setMapboxToken('');
@@ -122,7 +105,6 @@ const ParkingMap = ({ locations }: ParkingMapProps) => {
 
   useEffect(() => {
     if (isTokenSet) {
-      // Check if stored token is valid before initialization
       if (validateToken(mapboxToken)) {
         initializeMap();
       } else {
@@ -137,7 +119,7 @@ const ParkingMap = ({ locations }: ParkingMapProps) => {
         map.current.remove();
       }
     };
-  }, [isTokenSet, locations]);
+  }, [isTokenSet, location]);
 
   if (!isTokenSet) {
     return (
@@ -145,9 +127,6 @@ const ParkingMap = ({ locations }: ParkingMapProps) => {
         <h3 className="text-lg font-semibold mb-4">Set Mapbox Token</h3>
         <p className="text-sm text-gray-600 mb-4">
           Please enter your Mapbox <strong>public</strong> token to view the map. You can get one at mapbox.com
-        </p>
-        <p className="text-sm text-gray-600 mb-4">
-          Note: The token must start with <code className="bg-gray-100 p-1 rounded">pk.</code> (Mapbox public token)
         </p>
         {tokenError && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4 flex items-start">
@@ -175,10 +154,10 @@ const ParkingMap = ({ locations }: ParkingMapProps) => {
   }
 
   return (
-    <div className="h-[400px] rounded-lg overflow-hidden">
+    <div className="h-full rounded-lg overflow-hidden">
       <div ref={mapContainer} className="w-full h-full" />
     </div>
   );
 };
 
-export default ParkingMap;
+export default ParkingLocationMap;

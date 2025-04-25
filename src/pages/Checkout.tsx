@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import CheckoutCarDetails from '@/components/checkout/CheckoutCarDetails';
 import CheckoutPayment from '@/components/checkout/CheckoutPayment';
 import CheckoutSuccess from '@/components/checkout/CheckoutSuccess';
+import ParkingLotSummary from '@/components/checkout/ParkingLotSummary';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 // Define the reservation data type
@@ -57,53 +58,61 @@ const Checkout = () => {
   
   return (
     <MainLayout>
-      <div className="max-w-3xl mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-4 py-8">
         <h1 className="text-2xl md:text-3xl font-bold mb-6 text-center">Complete Your Reservation</h1>
         
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex justify-between items-center">
-              <span>
-                {step === 'car-details' && 'Step 1: Car Details'}
-                {step === 'payment' && 'Step 2: Payment'}
-                {step === 'success' && 'Reservation Complete!'}
-              </span>
-              {(step === 'car-details' || step === 'payment') && (
-                <div className="text-sm font-normal text-muted-foreground">
-                  {reservationData.parkingLotName} - Spot {reservationData.spotId}
-                </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex justify-between items-center">
+                  <span>
+                    {step === 'car-details' && 'Step 1: Car Details'}
+                    {step === 'payment' && 'Step 2: Payment'}
+                    {step === 'success' && 'Reservation Complete!'}
+                  </span>
+                  {(step === 'car-details' || step === 'payment') && (
+                    <div className="text-sm font-normal text-muted-foreground">
+                      {reservationData.parkingLotName} - Spot {reservationData.spotId}
+                    </div>
+                  )}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {step === 'car-details' && (
+                  <CheckoutCarDetails 
+                    initialValues={carDetails} 
+                    onSubmit={handleCarDetailsSubmit}
+                  />
+                )}
+                {step === 'payment' && (
+                  <CheckoutPayment 
+                    reservation={reservationData}
+                    carDetails={carDetails}
+                    onBack={handleBackToCarDetails}
+                    onComplete={handlePaymentComplete}
+                  />
+                )}
+                {step === 'success' && (
+                  <CheckoutSuccess 
+                    reservation={reservationData}
+                    carDetails={carDetails}
+                    onFinish={handleFinish}
+                  />
+                )}
+              </CardContent>
+              {step === 'success' && (
+                <CardFooter className="flex justify-center">
+                  <Button onClick={handleFinish}>Return to Dashboard</Button>
+                </CardFooter>
               )}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {step === 'car-details' && (
-              <CheckoutCarDetails 
-                initialValues={carDetails} 
-                onSubmit={handleCarDetailsSubmit}
-              />
-            )}
-            {step === 'payment' && (
-              <CheckoutPayment 
-                reservation={reservationData}
-                carDetails={carDetails}
-                onBack={handleBackToCarDetails}
-                onComplete={handlePaymentComplete}
-              />
-            )}
-            {step === 'success' && (
-              <CheckoutSuccess 
-                reservation={reservationData}
-                carDetails={carDetails}
-                onFinish={handleFinish}
-              />
-            )}
-          </CardContent>
-          {step === 'success' && (
-            <CardFooter className="flex justify-center">
-              <Button onClick={handleFinish}>Return to Dashboard</Button>
-            </CardFooter>
-          )}
-        </Card>
+            </Card>
+          </div>
+          
+          <div className="lg:sticky lg:top-6 h-fit">
+            <ParkingLotSummary reservation={reservationData} />
+          </div>
+        </div>
       </div>
     </MainLayout>
   );

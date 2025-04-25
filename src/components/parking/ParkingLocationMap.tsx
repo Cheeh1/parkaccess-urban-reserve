@@ -16,6 +16,8 @@ const ParkingLocationMap = ({ location }: ParkingLocationMapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const [isTokenSet, setIsTokenSet] = useState(!!localStorage.getItem('mapbox_token'));
+  // Track if the component is mounted
+  const isMounted = useRef(true);
 
   const initializeMap = () => {
     if (!mapContainer.current) return;
@@ -60,14 +62,26 @@ const ParkingLocationMap = ({ location }: ParkingLocationMapProps) => {
   };
 
   useEffect(() => {
+    isMounted.current = true;
+    
     if (isTokenSet) {
       initializeMap();
     }
 
     return () => {
+      isMounted.current = false;
+      // Safely remove the map to prevent the "indoor" error
       if (map.current) {
-        map.current.remove();
+        try {
+          // First check if the map exists and has not been destroyed
+          if (map.current._removed !== true) {
+            map.current.remove();
+          }
+        } catch (error) {
+          console.error('Error cleaning up map:', error);
+        }
       }
+      map.current = null;
     };
   }, [isTokenSet, location]);
 

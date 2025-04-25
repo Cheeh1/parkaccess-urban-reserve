@@ -70,17 +70,9 @@ const ParkingLocationMap = ({ location }: ParkingLocationMapProps) => {
 
     return () => {
       isMounted.current = false;
-      // Safely remove the map to prevent the "indoor" error
-      if (map.current) {
-        try {
-          // First check if the map exists and has not been destroyed
-          if (map.current._removed !== true) {
-            map.current.remove();
-          }
-        } catch (error) {
-          console.error('Error cleaning up map:', error);
-        }
-      }
+      
+      // Safely nullify the map instance without calling remove()
+      // This avoids the "indoor" error by skipping the problematic removal method
       map.current = null;
     };
   }, [isTokenSet, location]);

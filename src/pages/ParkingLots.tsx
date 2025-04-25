@@ -6,6 +6,7 @@ import { Filter, ChevronDown, ChevronUp } from 'lucide-react';
 import ParkingSearch from '@/components/parking/ParkingSearch';
 import ParkingFilters from '@/components/parking/ParkingFilters';
 import ParkingLotCard from '@/components/parking/ParkingLotCard';
+import ParkingLocationMap from '@/components/parking/ParkingLocationMap';
 import { mockParkingLots, ParkingLot } from '@/utils/parkingData';
 
 const ParkingLots = () => {
@@ -97,6 +98,21 @@ const ParkingLots = () => {
     return 'availability-low';
   };
   
+  const getCentralCoordinates = (): [number, number] => {
+    if (filteredLots.length === 0) return [4.5418, 8.5433]; // Default coordinates
+    
+    // Calculate the average of all coordinates
+    const sumLng = filteredLots.reduce((sum, lot) => {
+      return sum + (4.5418 + (parseInt(lot.id) * 0.002));
+    }, 0);
+    
+    const sumLat = filteredLots.reduce((sum, lot) => {
+      return sum + (8.5433 + (parseInt(lot.id) * 0.002));
+    }, 0);
+    
+    return [sumLng / filteredLots.length, sumLat / filteredLots.length];
+  };
+  
   return (
     <MainLayout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -150,8 +166,16 @@ const ParkingLots = () => {
           <div className="lg:w-3/4">
             <h2 className="text-2xl font-bold mb-4">Available Parking Lots</h2>
             
-            <div className="mb-6">
-              <ParkingMap locations={filteredLots} />
+            <div className="mb-6 h-64">
+              {filteredLots.length > 0 && (
+                <ParkingLocationMap 
+                  location={{
+                    name: "Parking Lots Overview",
+                    address: location || "Selected Area",
+                    coordinates: getCentralCoordinates()
+                  }}
+                />
+              )}
             </div>
             
             {filteredLots.length === 0 ? (

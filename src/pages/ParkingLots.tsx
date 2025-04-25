@@ -1,10 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import MainLayout from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
 import { Filter, ChevronDown, ChevronUp } from 'lucide-react';
-import ParkingMap from '@/components/parking/ParkingMap';
 import ParkingSearch from '@/components/parking/ParkingSearch';
 import ParkingFilters from '@/components/parking/ParkingFilters';
 import ParkingLotCard from '@/components/parking/ParkingLotCard';

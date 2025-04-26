@@ -3,6 +3,8 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import ParkingLotHeader from './ParkingLotHeader';
+import ParkingLotDetails from './ParkingLotDetails';
 
 interface ParkingLotCardProps {
   id: string;
@@ -43,27 +45,17 @@ const ParkingLotCard = ({
   return (
     <Card className="overflow-hidden">
       <CardContent className="p-6">
-        <div className="flex justify-between items-start mb-4">
-          <div>
-            <h3 className="text-lg font-semibold">{name}</h3>
-            <p className="text-sm text-muted-foreground">{address}</p>
-          </div>
-          <div className="text-right">
-            <p className="text-lg font-bold">₦{price}</p>
-            <p className="text-sm text-muted-foreground">per hour</p>
-          </div>
-        </div>
+        <ParkingLotHeader 
+          name={name} 
+          address={address} 
+          price={price} 
+        />
         
-        <div className="space-y-2 mb-4">
-          <p className="text-sm">
-            <span className="text-muted-foreground">Available spots: </span>
-            <span className="font-medium">{availableSpots}/{totalSpots}</span>
-          </p>
-          <p className="text-sm">
-            <span className="text-muted-foreground">Distance: </span>
-            <span className="font-medium">{distance.toFixed(1)} km</span>
-          </p>
-        </div>
+        <ParkingLotDetails 
+          availableSpots={availableSpots}
+          totalSpots={totalSpots}
+          distance={distance}
+        />
         
         <Button 
           className="w-full" 

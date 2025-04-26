@@ -19,8 +19,14 @@ const ParkingLotsList = ({ lots, getAvailabilityClass }: ParkingLotsListProps) =
       {lots.map((lot) => (
         <ParkingLotCard
           key={lot.id}
-          lot={lot}
-          getAvailabilityClass={getAvailabilityClass}
+          id={lot.id}
+          name={lot.name}
+          address={lot.address}
+          price={lot.price}
+          availableSpots={lot.availableSpots}
+          totalSpots={lot.totalSpots}
+          distance={parseFloat(lot.distance)}
+          spotId={lot.spotId}
         />
       ))}
     </div>

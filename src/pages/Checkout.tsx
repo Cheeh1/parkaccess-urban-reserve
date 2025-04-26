@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import MainLayout from '@/components/layout/MainLayout';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,6 +8,7 @@ import CheckoutPayment from '@/components/checkout/CheckoutPayment';
 import CheckoutSuccess from '@/components/checkout/CheckoutSuccess';
 import ParkingLotSummary from '@/components/checkout/ParkingLotSummary';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useToast } from '@/hooks/use-toast';
 
 interface ReservationData {
   parkingLotName: string;
@@ -26,6 +28,7 @@ const Checkout = () => {
   });
   const location = useLocation();
   const navigate = useNavigate();
+  const { toast } = useToast();
   
   const reservationData: ReservationData = location.state?.reservation || {
     parkingLotName: 'Sample Parking Lot',
@@ -35,6 +38,29 @@ const Checkout = () => {
     endTime: '12:00',
     totalPrice: 1200,
   };
+  
+  useEffect(() => {
+    // Load Paystack script when component mounts
+    const script = document.createElement('script');
+    script.src = 'https://js.paystack.co/v1/inline.js';
+    script.async = true;
+    script.onload = () => {
+      console.log('Paystack script loaded successfully');
+    };
+    script.onerror = () => {
+      toast({
+        title: "Payment Error",
+        description: "Failed to load payment provider. Please try again later.",
+        variant: "destructive",
+      });
+    };
+    document.body.appendChild(script);
+
+    return () => {
+      // Clean up script when component unmounts
+      document.body.removeChild(script);
+    };
+  }, [toast]);
   
   const handleCarDetailsSubmit = (details: typeof carDetails) => {
     setCarDetails(details);

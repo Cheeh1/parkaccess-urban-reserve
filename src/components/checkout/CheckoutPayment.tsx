@@ -6,6 +6,19 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
+import { usePaystackPayment } from '@/utils/paystack';
+import { Input } from '@/components/ui/input';
+import { z } from 'zod';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 
 interface Reservation {
   parkingLotName: string;
@@ -29,23 +42,66 @@ interface CheckoutPaymentProps {
   onComplete: () => void;
 }
 
+const formSchema = z.object({
+  email: z.string().email({ message: "Please enter a valid email address" }),
+});
+
+type FormValues = z.infer<typeof formSchema>;
+
 const CheckoutPayment = ({ reservation, carDetails, onBack, onComplete }: CheckoutPaymentProps) => {
-  const [paymentMethod, setPaymentMethod] = useState<string>("credit-card");
+  const [paymentMethod, setPaymentMethod] = useState<string>("paystack");
   const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
+  const { initiatePayment } = usePaystackPayment();
   
-  const handlePayment = () => {
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      email: "",
+    },
+  });
+  
+  const handlePayment = (values: FormValues) => {
     setIsProcessing(true);
     
-    // Simulate payment processing
-    setTimeout(() => {
+    // Convert price from Naira to Kobo (multiply by 100)
+    const amountInKobo = reservation.totalPrice * 100;
+    
+    const success = initiatePayment({
+      email: values.email,
+      amount: amountInKobo,
+      metadata: {
+        parkingLotName: reservation.parkingLotName,
+        spotId: reservation.spotId,
+        carModel: carDetails.model,
+        carColor: carDetails.color,
+        plateNumber: carDetails.plateNumber,
+      },
+      onSuccess: (reference) => {
+        toast({
+          title: "Payment successful",
+          description: `Transaction reference: ${reference}`,
+        });
+        setIsProcessing(false);
+        onComplete();
+      },
+      onCancel: () => {
+        setIsProcessing(false);
+        toast({
+          title: "Payment cancelled",
+          description: "You have cancelled the payment.",
+        });
+      },
+    });
+    
+    if (!success) {
       setIsProcessing(false);
       toast({
-        title: "Payment successful",
-        description: "Your payment has been processed successfully.",
+        title: "Payment Error",
+        description: "Could not initialize payment. Please try again later.",
+        variant: "destructive",
       });
-      onComplete();
-    }, 1500);
+    }
   };
 
   return (
@@ -98,52 +154,68 @@ const CheckoutPayment = ({ reservation, carDetails, onBack, onComplete }: Checko
         </div>
       </div>
       
-      <div className="space-y-4">
-        <h3 className="font-medium">Payment Method</h3>
-        
-        <RadioGroup 
-          defaultValue="credit-card" 
-          value={paymentMethod}
-          onValueChange={setPaymentMethod}
-          className="space-y-3"
-        >
-          <div className="flex items-center space-x-2 border rounded-md p-3 cursor-pointer hover:bg-muted/50">
-            <RadioGroupItem value="credit-card" id="credit-card" />
-            <Label htmlFor="credit-card" className="flex-grow cursor-pointer">
-              <div className="flex justify-between items-center">
-                <span>Credit / Debit Card</span>
-                <div className="flex space-x-1">
-                  <div className="h-6 w-10 bg-blue-600 rounded text-white flex items-center justify-center text-xs font-bold">VISA</div>
-                  <div className="h-6 w-10 bg-red-500 rounded text-white flex items-center justify-center text-xs font-bold">MC</div>
-                </div>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(handlePayment)} className="space-y-6">
+          <div className="space-y-4">
+            <h3 className="font-medium">Payment Details</h3>
+            
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email Address</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="your.email@example.com" 
+                      type="email" 
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <RadioGroup 
+              defaultValue="paystack" 
+              value={paymentMethod}
+              onValueChange={setPaymentMethod}
+              className="space-y-3 mt-4"
+            >
+              <div className="flex items-center space-x-2 border rounded-md p-3 cursor-pointer hover:bg-muted/50">
+                <RadioGroupItem value="paystack" id="paystack" />
+                <Label htmlFor="paystack" className="flex-grow cursor-pointer">
+                  <div className="flex justify-between items-center">
+                    <span>Paystack</span>
+                    <div className="flex space-x-1">
+                      <div className="h-6 w-10 bg-green-600 rounded text-white flex items-center justify-center text-xs font-bold">Pay</div>
+                    </div>
+                  </div>
+                </Label>
               </div>
-            </Label>
+            </RadioGroup>
           </div>
           
-          <div className="flex items-center space-x-2 border rounded-md p-3 cursor-pointer hover:bg-muted/50">
-            <RadioGroupItem value="bank-transfer" id="bank-transfer" />
-            <Label htmlFor="bank-transfer" className="cursor-pointer">Bank Transfer</Label>
+          <div className="flex flex-col sm:flex-row gap-3 pt-4">
+            <Button 
+              variant="outline" 
+              onClick={onBack} 
+              type="button"
+              className="flex-1"
+            >
+              Back
+            </Button>
+            <Button 
+              type="submit"
+              className="flex-1" 
+              disabled={isProcessing}
+            >
+              {isProcessing ? "Processing..." : `Pay ₦${reservation.totalPrice}`}
+            </Button>
           </div>
-          
-          <div className="flex items-center space-x-2 border rounded-md p-3 cursor-pointer hover:bg-muted/50">
-            <RadioGroupItem value="ussd" id="ussd" />
-            <Label htmlFor="ussd" className="cursor-pointer">USSD</Label>
-          </div>
-        </RadioGroup>
-      </div>
-      
-      <div className="flex flex-col sm:flex-row gap-3 pt-4">
-        <Button variant="outline" onClick={onBack} className="flex-1">
-          Back
-        </Button>
-        <Button 
-          onClick={handlePayment} 
-          className="flex-1" 
-          disabled={isProcessing}
-        >
-          {isProcessing ? "Processing..." : `Pay ₦${reservation.totalPrice}`}
-        </Button>
-      </div>
+        </form>
+      </Form>
     </div>
   );
 };

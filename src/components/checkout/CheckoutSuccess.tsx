@@ -1,8 +1,10 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, Download, Calendar, Clock, Car, MapPin, CreditCard } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
+import { useToast } from '@/hooks/use-toast';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 interface Reservation {
   parkingLotName: string;
@@ -27,6 +29,41 @@ interface CheckoutSuccessProps {
 
 const CheckoutSuccess = ({ reservation, carDetails, onFinish }: CheckoutSuccessProps) => {
   const ticketId = `TKT-${Math.floor(100000 + Math.random() * 900000)}`;
+  const { toast } = useToast();
+  
+  const downloadETicket = async () => {
+    try {
+      const element = document.getElementById('e-ticket');
+      if (!element) return;
+      
+      const canvas = await html2canvas(element);
+      const imgData = canvas.toDataURL('image/png');
+      
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4',
+      });
+      
+      const imgProps = pdf.getImageProperties(imgData);
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+      
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`parking-ticket-${ticketId}.pdf`);
+      
+      toast({
+        title: "Success",
+        description: "E-Ticket downloaded successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to download E-Ticket. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
   
   return (
     <div className="space-y-6">
@@ -40,7 +77,7 @@ const CheckoutSuccess = ({ reservation, carDetails, onFinish }: CheckoutSuccessP
         </p>
       </div>
       
-      <div className="bg-muted/30 border-dashed border-2 border-muted rounded-lg p-6 relative">
+      <div id="e-ticket" className="bg-muted/30 border-dashed border-2 border-muted rounded-lg p-6 relative">
         <div className="absolute -left-2 top-1/2 -translate-y-1/2 w-4 h-8 bg-background rounded-full"></div>
         <div className="absolute -right-2 top-1/2 -translate-y-1/2 w-4 h-8 bg-background rounded-full"></div>
         
@@ -108,7 +145,7 @@ const CheckoutSuccess = ({ reservation, carDetails, onFinish }: CheckoutSuccessP
         </div>
         
         <div className="mt-6 flex justify-center">
-          <Button variant="outline" size="sm" className="flex items-center">
+          <Button variant="outline" size="sm" className="flex items-center" onClick={downloadETicket}>
             <Download className="h-4 w-4 mr-2" />
             Download E-Ticket
           </Button>

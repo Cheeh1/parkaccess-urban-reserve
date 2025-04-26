@@ -104,7 +104,7 @@ const CheckoutCarDetails = ({ initialValues, onSubmit }: CheckoutCarDetailsProps
           
           <div className="pt-4">
             <Button type="submit" className="w-full">
-              Save Car Details
+              Proceed to Payment
             </Button>
           </div>
         </form>

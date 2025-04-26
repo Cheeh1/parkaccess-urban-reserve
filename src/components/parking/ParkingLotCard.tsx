@@ -1,158 +1,79 @@
-import React, { useState } from 'react';
+
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { MapPin, Car, Accessibility, Wifi, Coffee, Shield, Star } from 'lucide-react';
-import ParkingLotDetails from './ParkingLotDetails';
 
-interface ParkingLot {
+interface ParkingLotCardProps {
   id: string;
   name: string;
   address: string;
-  distance: string;
   price: number;
-  rating: number;
-  totalRatings: number;
   availableSpots: number;
   totalSpots: number;
-  amenities: string[];
-  image: string;
+  distance: number;
+  spotId: string;
 }
 
-interface ParkingLotCardProps {
-  lot: ParkingLot;
-  getAvailabilityClass: (available: number, total: number) => string;
-}
-
-const ParkingLotCard = ({ lot, getAvailabilityClass }: ParkingLotCardProps) => {
+const ParkingLotCard = ({
+  id,
+  name,
+  address,
+  price,
+  availableSpots,
+  totalSpots,
+  distance,
+  spotId,
+}: ParkingLotCardProps) => {
   const navigate = useNavigate();
-  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
-
+  
   const handleReserve = () => {
-    const currentDate = new Date().toISOString().split('T')[0];
-    const currentTime = new Date().toLocaleTimeString('en-US', { 
-      hour: '2-digit', 
-      minute: '2-digit',
-      hour12: false 
-    });
-    
     const reservation = {
-      parkingLotName: lot.name,
-      spotId: `A-${Math.floor(Math.random() * 100)}`,
-      date: currentDate,
-      startTime: currentTime,
-      endTime: '23:59',
-      totalPrice: lot.price,
+      parkingLotName: name,
+      spotId: spotId,
+      date: new Date().toISOString().split('T')[0],
+      startTime: '10:00',
+      endTime: '12:00',
+      totalPrice: price,
     };
-
+    
     navigate('/checkout', { state: { reservation } });
   };
-
-  const handleCardClick = (e: React.MouseEvent) => {
-    const target = e.target as HTMLElement;
-    if (target.closest('button')) return;
-    setIsDetailsOpen(true);
-  };
-
+  
   return (
-    <>
-      <Card 
-        className="parking-card overflow-hidden cursor-pointer transition-shadow hover:shadow-lg"
-        onClick={handleCardClick}
-      >
-        <div className="flex flex-col md:flex-row">
-          <div className="md:w-1/3 h-48 md:h-auto relative">
-            <img 
-              src={lot.image} 
-              alt={lot.name}
-              className="w-full h-full object-cover"
-            />
+    <Card className="overflow-hidden">
+      <CardContent className="p-6">
+        <div className="flex justify-between items-start mb-4">
+          <div>
+            <h3 className="text-lg font-semibold">{name}</h3>
+            <p className="text-sm text-muted-foreground">{address}</p>
           </div>
-          <CardContent className="p-4 md:p-6 md:w-2/3">
-            <div className="flex flex-col md:flex-row justify-between">
-              <div>
-                <h3 className="text-xl font-bold">{lot.name}</h3>
-                <div className="flex items-center mt-1">
-                  <MapPin className="h-4 w-4 text-gray-400 mr-1" />
-                  <p className="text-gray-600 text-sm">{lot.address}</p>
-                </div>
-                <div className="flex items-center mt-1">
-                  <Star className="h-4 w-4 text-yellow-500 mr-1" />
-                  <p className="text-gray-600 text-sm">
-                    {lot.rating} ({lot.totalRatings} reviews)
-                  </p>
-                </div>
-              </div>
-              <div className="mt-4 md:mt-0 text-right">
-                <p className="text-2xl font-bold text-parking-primary">₦{lot.price}</p>
-                <p className="text-gray-500 text-sm">per hour</p>
-              </div>
-            </div>
-            
-            <div className="flex flex-col md:flex-row md:justify-between mt-4">
-              <div className="flex flex-wrap gap-2 mb-4 md:mb-0">
-                {lot.amenities.includes('security') && (
-                  <div className="flex items-center bg-gray-100 px-2 py-1 rounded text-xs">
-                    <Shield className="h-3 w-3 mr-1" />
-                    Security
-                  </div>
-                )}
-                {lot.amenities.includes('covered') && (
-                  <div className="flex items-center bg-gray-100 px-2 py-1 rounded text-xs">
-                    <Car className="h-3 w-3 mr-1" />
-                    Covered
-                  </div>
-                )}
-                {lot.amenities.includes('accessible') && (
-                  <div className="flex items-center bg-gray-100 px-2 py-1 rounded text-xs">
-                    <Accessibility className="h-3 w-3 mr-1" />
-                    Accessible
-                  </div>
-                )}
-                {lot.amenities.includes('cafe') && (
-                  <div className="flex items-center bg-gray-100 px-2 py-1 rounded text-xs">
-                    <Coffee className="h-3 w-3 mr-1" />
-                    Cafe
-                  </div>
-                )}
-                {lot.amenities.includes('wifi') && (
-                  <div className="flex items-center bg-gray-100 px-2 py-1 rounded text-xs">
-                    <Wifi className="h-3 w-3 mr-1" />
-                    WiFi
-                  </div>
-                )}
-                {lot.amenities.length > 5 && (
-                  <div className="flex items-center bg-gray-100 px-2 py-1 rounded text-xs">
-                    +{lot.amenities.length - 5} more
-                  </div>
-                )}
-              </div>
-              
-              <div className="flex items-center space-x-4">
-                <div className="flex flex-col items-center">
-                  <div className={getAvailabilityClass(lot.availableSpots, lot.totalSpots)}>
-                    {lot.availableSpots}/{lot.totalSpots} spots
-                  </div>
-                  <p className="text-gray-500 text-xs mt-1">{lot.distance} away</p>
-                </div>
-                <Button 
-                  onClick={handleReserve}
-                  className="bg-parking-secondary hover:bg-parking-primary"
-                >
-                  Reserve
-                </Button>
-              </div>
-            </div>
-          </CardContent>
+          <div className="text-right">
+            <p className="text-lg font-bold">₦{price}</p>
+            <p className="text-sm text-muted-foreground">per hour</p>
+          </div>
         </div>
-      </Card>
-
-      <ParkingLotDetails 
-        isOpen={isDetailsOpen}
-        onClose={() => setIsDetailsOpen(false)}
-        lot={lot}
-      />
-    </>
+        
+        <div className="space-y-2 mb-4">
+          <p className="text-sm">
+            <span className="text-muted-foreground">Available spots: </span>
+            <span className="font-medium">{availableSpots}/{totalSpots}</span>
+          </p>
+          <p className="text-sm">
+            <span className="text-muted-foreground">Distance: </span>
+            <span className="font-medium">{distance.toFixed(1)} km</span>
+          </p>
+        </div>
+        
+        <Button 
+          className="w-full" 
+          onClick={handleReserve}
+          disabled={availableSpots === 0}
+        >
+          {availableSpots === 0 ? 'No Spots Available' : 'Reserve Spot'}
+        </Button>
+      </CardContent>
+    </Card>
   );
 };
 

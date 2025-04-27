@@ -1,8 +1,7 @@
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import MapboxTokenManager from './MapboxTokenManager';
 
 interface ParkingLocationMapProps {
   location: {
@@ -15,17 +14,11 @@ interface ParkingLocationMapProps {
 const ParkingLocationMap = ({ location }: ParkingLocationMapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
-  const [isTokenSet, setIsTokenSet] = useState(!!localStorage.getItem('mapbox_token'));
-  // Track if the component is mounted
-  const isMounted = useRef(true);
-
+  
   const initializeMap = () => {
     if (!mapContainer.current) return;
-
-    const token = localStorage.getItem('mapbox_token');
-    if (!token) return;
-
-    mapboxgl.accessToken = token;
+    
+    mapboxgl.accessToken = 'pk.eyJ1IjoiaGFkaW1pcjIyIiwiYSI6ImNqeHc0dTZxajBiNHozaHA4NGJ3dzdjZ3cifQ.8hK4ePzKqcqVZO041M4SUA';
     
     if (map.current) return;
 
@@ -52,34 +45,16 @@ const ParkingLocationMap = ({ location }: ParkingLocationMapProps) => {
 
     } catch (error) {
       console.error('Error initializing map:', error);
-      localStorage.removeItem('mapbox_token');
-      setIsTokenSet(false);
     }
-  };
-
-  const handleTokenSet = (token: string) => {
-    setIsTokenSet(true);
   };
 
   useEffect(() => {
-    isMounted.current = true;
+    initializeMap();
     
-    if (isTokenSet) {
-      initializeMap();
-    }
-
     return () => {
-      isMounted.current = false;
-      
-      // Safely nullify the map instance without calling remove()
-      // This avoids the "indoor" error by skipping the problematic removal method
       map.current = null;
     };
-  }, [isTokenSet, location]);
-
-  if (!isTokenSet) {
-    return <MapboxTokenManager onTokenSet={handleTokenSet} />;
-  }
+  }, [location]);
 
   return (
     <div className="h-full rounded-lg overflow-hidden">

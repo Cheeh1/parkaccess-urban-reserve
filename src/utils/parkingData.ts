@@ -1,3 +1,4 @@
+
 export interface ParkingLot {
   id: string;
   name: string;
@@ -10,6 +11,7 @@ export interface ParkingLot {
   totalSpots: number;
   amenities: string[];
   image: string;
+  spotId: string;
 }
 
 export const mockParkingLots: ParkingLot[] = [
@@ -25,6 +27,7 @@ export const mockParkingLots: ParkingLot[] = [
     totalSpots: 25,
     amenities: ['security', 'covered', 'accessible', 'cctv'],
     image: 'https://images.unsplash.com/photo-1470224114660-3f6686c562eb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+    spotId: 'A-15'
   },
   {
     id: '2',
@@ -38,6 +41,7 @@ export const mockParkingLots: ParkingLot[] = [
     totalSpots: 40,
     amenities: ['security', 'accessible'],
     image: 'https://images.unsplash.com/photo-1573348722427-f1d6819fdf98?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+    spotId: 'B-08'
   },
   {
     id: '3',
@@ -51,6 +55,7 @@ export const mockParkingLots: ParkingLot[] = [
     totalSpots: 120,
     amenities: ['security', 'covered', 'accessible', 'cctv', 'ev_charging', 'restrooms', 'cafe'],
     image: 'https://images.unsplash.com/photo-1582648373212-d3bd443a2024?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+    spotId: 'C-35'
   },
   {
     id: '4',
@@ -64,6 +69,7 @@ export const mockParkingLots: ParkingLot[] = [
     totalSpots: 30,
     amenities: ['security'],
     image: 'https://images.unsplash.com/photo-1553413077-190dd305871c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+    spotId: 'D-05'
   },
   {
     id: '5',
@@ -77,5 +83,6 @@ export const mockParkingLots: ParkingLot[] = [
     totalSpots: 200,
     amenities: ['security', 'accessible', 'cctv'],
     image: 'https://images.unsplash.com/photo-1506521781263-d8422e82f27a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+    spotId: 'E-50'
   }
 ];

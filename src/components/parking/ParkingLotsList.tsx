@@ -27,6 +27,7 @@ const ParkingLotsList = ({ lots, getAvailabilityClass }: ParkingLotsListProps) =
           totalSpots={lot.totalSpots}
           distance={parseFloat(lot.distance)}
           spotId={lot.spotId}
+          image={lot.image}
         />
       ))}
     </div>

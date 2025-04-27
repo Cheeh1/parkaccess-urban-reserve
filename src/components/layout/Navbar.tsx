@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -25,7 +24,6 @@ const Navbar = () => {
             </Link>
           </div>
           
-          {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-4">
             <Link to="/parking-lots" className="text-gray-600 hover:text-parking-secondary px-3 py-2 rounded-md text-sm font-medium">
               Find Parking
@@ -59,7 +57,6 @@ const Navbar = () => {
             )}
           </div>
           
-          {/* Mobile menu button */}
           <div className="flex md:hidden items-center">
             <button
               onClick={toggleMobileMenu}
@@ -72,7 +69,6 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Mobile menu */}
       <div className={`md:hidden ${isMobileMenuOpen ? 'block' : 'hidden'}`}>
         <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-white shadow-lg">
           <Link to="/parking-lots" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-parking-primary hover:bg-gray-50">

@@ -10,7 +10,6 @@ import ParkingLots from "./pages/ParkingLots";
 import Login from "./pages/Login";
 import SignUp from "./pages/SignUp";
 import Dashboard from "./pages/Dashboard";
-import CompanyLogin from "./pages/CompanyLogin";
 import CompanyDashboard from "./pages/CompanyDashboard";
 import Checkout from "./pages/Checkout";
 import NotFound from "./pages/NotFound";
@@ -32,7 +31,6 @@ const App = () => {
               <Route path="/login" element={<Login />} />
               <Route path="/sign-up" element={<SignUp />} />
               <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/company-login" element={<CompanyLogin />} />
               <Route path="/company-dashboard" element={<CompanyDashboard />} />
               <Route path="/checkout" element={<Checkout />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

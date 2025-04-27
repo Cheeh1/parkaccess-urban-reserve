@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import MainLayout from '@/components/layout/MainLayout';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import CheckoutCarDetails from '@/components/checkout/CheckoutCarDetails';
 import CheckoutPayment from '@/components/checkout/CheckoutPayment';
@@ -71,16 +71,22 @@ const Checkout = () => {
     setStep('success');
   };
   
-  const handleBackToCarDetails = () => {
-    setStep('car-details');
-  };
-  
   const handleFinish = () => {
     navigate('/dashboard');
   };
-  
-  const handleProceedToPayment = () => {
-    setStep('payment');
+
+  const handleStepAction = () => {
+    if (step === 'car-details') {
+      document.querySelector('form')?.requestSubmit();
+    } else if (step === 'payment') {
+      document.querySelector('form')?.requestSubmit();
+    }
+  };
+
+  const handleBack = () => {
+    if (step === 'payment') {
+      setStep('car-details');
+    }
   };
   
   return (
@@ -107,18 +113,43 @@ const Checkout = () => {
               </CardHeader>
               <CardContent>
                 {step === 'car-details' && (
-                  <CheckoutCarDetails 
-                    initialValues={carDetails} 
-                    onSubmit={handleCarDetailsSubmit}
-                  />
+                  <div className="space-y-6">
+                    <CheckoutCarDetails 
+                      initialValues={carDetails} 
+                      onSubmit={handleCarDetailsSubmit}
+                    />
+                    <Button 
+                      onClick={handleStepAction}
+                      className="w-full"
+                    >
+                      Continue to Payment
+                    </Button>
+                  </div>
                 )}
                 {step === 'payment' && (
-                  <CheckoutPayment 
-                    reservation={reservationData}
-                    carDetails={carDetails}
-                    onBack={handleBackToCarDetails}
-                    onComplete={handlePaymentComplete}
-                  />
+                  <div className="space-y-6">
+                    <CheckoutPayment 
+                      reservation={reservationData}
+                      carDetails={carDetails}
+                      onBack={handleBack}
+                      onComplete={handlePaymentComplete}
+                    />
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <Button 
+                        variant="outline" 
+                        onClick={handleBack}
+                        className="flex-1"
+                      >
+                        Back
+                      </Button>
+                      <Button 
+                        onClick={handleStepAction}
+                        className="flex-1"
+                      >
+                        Complete Payment
+                      </Button>
+                    </div>
+                  </div>
                 )}
                 {step === 'success' && (
                   <CheckoutSuccess 
@@ -128,19 +159,14 @@ const Checkout = () => {
                   />
                 )}
               </CardContent>
-              {step === 'success' && (
-                <CardFooter className="flex justify-center">
-                  <Button onClick={handleFinish}>Return to Dashboard</Button>
-                </CardFooter>
-              )}
             </Card>
           </div>
           
           <div className="lg:sticky lg:top-6 h-fit">
             <ParkingLotSummary 
               reservation={reservationData} 
-              showPaymentButton={step === 'car-details'} 
-              onPaymentClick={handleProceedToPayment}
+              showPaymentButton={false}
+              onPaymentClick={() => {}}
             />
           </div>
         </div>

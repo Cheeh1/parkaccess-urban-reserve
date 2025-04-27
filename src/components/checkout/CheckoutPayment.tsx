@@ -1,10 +1,8 @@
 
 import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
 import { CreditCard } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { usePaystackPayment } from '@/utils/paystack';
-import { Separator } from '@/components/ui/separator';
 import ReservationSummary from './ReservationSummary';
 import PaymentForm from './PaymentForm';
 
@@ -30,7 +28,7 @@ interface CheckoutPaymentProps {
   onComplete: () => void;
 }
 
-const CheckoutPayment = ({ reservation, carDetails, onBack, onComplete }: CheckoutPaymentProps) => {
+const CheckoutPayment = ({ reservation, carDetails, onComplete }: CheckoutPaymentProps) => {
   const [paymentMethod, setPaymentMethod] = useState<string>("paystack");
   const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
@@ -105,25 +103,6 @@ const CheckoutPayment = ({ reservation, carDetails, onBack, onComplete }: Checko
         isProcessing={isProcessing}
         totalPrice={reservation.totalPrice}
       />
-      
-      <div className="flex flex-col sm:flex-row gap-3 pt-4">
-        <Button 
-          variant="outline" 
-          onClick={onBack} 
-          type="button"
-          className="flex-1"
-        >
-          Back
-        </Button>
-        <Button 
-          type="submit"
-          className="flex-1" 
-          disabled={isProcessing}
-          onClick={() => document.querySelector('form')?.requestSubmit()}
-        >
-          {isProcessing ? "Processing..." : `Pay ₦${reservation.totalPrice}`}
-        </Button>
-      </div>
     </div>
   );
 };

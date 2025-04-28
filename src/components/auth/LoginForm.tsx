@@ -9,6 +9,7 @@ import { Car, Eye, EyeOff, Lock, Mail } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Checkbox } from "@/components/ui/checkbox";
 import SocialLoginButtons from "@/components/auth/SocialLoginButtons";
+import { useToast } from "@/components/ui/use-toast";
 
 const LoginForm = () => {
   const [email, setEmail] = useState("");
@@ -16,13 +17,39 @@ const LoginForm = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   const { signIn } = useAuth();
+  const { toast } = useToast();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    await signIn(email, password);
-    setLoading(false);
+    setErrorMessage("");
+    
+    if (!email || !password) {
+      setErrorMessage("Please enter both email and password");
+      setLoading(false);
+      return;
+    }
+    
+    try {
+      const result = await signIn(email, password);
+      if (!result) {
+        // This will be handled by the AuthContext error handler
+        setLoading(false);
+        return;
+      }
+      
+      toast({
+        title: "Login successful!",
+        description: "Welcome back to PARKACCESS.",
+      });
+    } catch (error: any) {
+      console.error("Login error:", error);
+      setErrorMessage(error.message || "Invalid login credentials. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -43,6 +70,11 @@ const LoginForm = () => {
           <CardTitle className="text-center">Sign In</CardTitle>
         </CardHeader>
         <CardContent>
+          {errorMessage && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-md text-sm">
+              {errorMessage}
+            </div>
+          )}
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>

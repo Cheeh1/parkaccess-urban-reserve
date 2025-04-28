@@ -8,7 +8,7 @@ import { useToast } from '@/components/ui/use-toast';
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<void>;
+  signIn: (email: string, password: string) => Promise<boolean>;
   signUp: (email: string, password: string, userData: any) => Promise<void>;
   signOut: () => Promise<void>;
 }
@@ -35,26 +35,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => subscription.unsubscribe();
   }, []);
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (email: string, password: string): Promise<boolean> => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      if (error) throw error;
+      if (error) {
+        toast({
+          title: "Login failed",
+          description: error.message,
+          variant: "destructive",
+        });
+        console.error("Login error:", error);
+        return false;
+      }
 
-      navigate('/dashboard');
-      toast({
-        title: "Welcome back!",
-        description: "You've successfully signed in.",
-      });
+      if (data?.user) {
+        navigate('/dashboard');
+        toast({
+          title: "Welcome back!",
+          description: "You've successfully signed in.",
+        });
+        return true;
+      }
+      
+      return false;
     } catch (error: any) {
       toast({
         title: "Error signing in",
         description: error.message,
         variant: "destructive",
       });
+      console.error("Sign-in exception:", error);
+      return false;
     }
   };
 

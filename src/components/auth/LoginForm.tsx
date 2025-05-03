@@ -1,56 +1,55 @@
-
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardFooter,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Car, Eye, EyeOff, Lock, Mail } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
-import { Checkbox } from "@/components/ui/checkbox";
 import SocialLoginButtons from "@/components/auth/SocialLoginButtons";
 import { useToast } from "@/components/ui/use-toast";
+import { loginSchema } from "@/utils/validationSchema";
 
 const LoginForm = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
-  const { signIn } = useAuth();
   const { toast } = useToast();
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setErrorMessage("");
-    
-    if (!email || !password) {
-      setErrorMessage("Please enter both email and password");
-      setLoading(false);
-      return;
-    }
-    
-    try {
-      const result = await signIn(email, password);
-      if (!result) {
-        // This will be handled by the AuthContext error handler
-        setLoading(false);
-        return;
-      }
-      
-      toast({
-        title: "Login successful!",
-        description: "Welcome back to PARKACCESS.",
-      });
-    } catch (error: any) {
-      console.error("Login error:", error);
-      setErrorMessage(error.message || "Invalid login credentials. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm({
+    resolver: yupResolver(loginSchema),
+  });
+
+  // const handleLogin = async (data: { email: string; password: string }) => {
+  //   try {
+  //     const result = await signIn(data.email, data.password);
+  //     if (!result) return;
+
+  //     toast({
+  //       title: "Login successful!",
+  //       description: "Welcome back to PARKACCESS.",
+  //     });
+  //   } catch (error: Error | unknown) {
+  //     console.error("Login error:", error);
+  //     toast({
+  //       title: "Login failed",
+  //       description:
+  //         error instanceof Error
+  //           ? error.message
+  //           : "Invalid login credentials. Please try again.",
+  //       variant: "destructive",
+  //     });
+  //   }
+  // };
 
   return (
     <div className="max-w-md w-full">
@@ -70,12 +69,7 @@ const LoginForm = () => {
           <CardTitle className="text-center">Sign In</CardTitle>
         </CardHeader>
         <CardContent>
-          {errorMessage && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-md text-sm">
-              {errorMessage}
-            </div>
-          )}
-          <form onSubmit={handleLogin} className="space-y-4">
+          <form onSubmit={handleSubmit(handleLogin)} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <div className="relative">
@@ -83,12 +77,14 @@ const LoginForm = () => {
                 <Input
                   id="email"
                   type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  {...register("email")}
                   className="pl-10"
                   placeholder="johndoe@example.com"
                 />
               </div>
+              {errors.email && (
+                <p className="text-red-500 text-xs">{errors.email.message}</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -106,8 +102,7 @@ const LoginForm = () => {
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  {...register("password")}
                   className="pl-10 pr-10"
                   placeholder="********"
                 />
@@ -116,29 +111,27 @@ const LoginForm = () => {
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-500"
                 >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
                 </button>
               </div>
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="rememberMe"
-                checked={rememberMe}
-                onCheckedChange={(checked) => setRememberMe(checked as boolean)}
-              />
-              <label htmlFor="rememberMe" className="text-sm text-gray-600 cursor-pointer">
-                Remember me
-              </label>
+              {errors.password && (
+                <p className="text-red-500 text-xs">
+                  {errors.password.message}
+                </p>
+              )}
             </div>
 
             <div className="pt-2">
               <Button
                 type="submit"
                 className="w-full bg-parking-secondary hover:bg-parking-primary h-11"
-                disabled={loading}
+                disabled={isSubmitting}
               >
-                {loading ? "Signing In..." : "Sign In"}
+                {isSubmitting ? "Signing In..." : "Sign In"}
               </Button>
             </div>
 
@@ -147,7 +140,9 @@ const LoginForm = () => {
                 <div className="w-full border-t border-gray-300"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">Or continue with</span>
+                <span className="px-2 bg-white text-gray-500">
+                  Or continue with
+                </span>
               </div>
             </div>
 

@@ -1,138 +1,192 @@
+import { createContext, useContext, useEffect, useState } from "react";
+import { User } from "@supabase/supabase-js";
+import { supabase } from "@/lib/supabase";
+import { UserProfile, UserRole } from "@/types/auth";
+import { Tables } from "@/integrations/supabase/types"; // Make sure to import from wherever you placed the types file
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { User } from '@supabase/supabase-js';
-import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/lib/supabase';
-import { useToast } from '@/components/ui/use-toast';
+// You can also define a more specific profile type that maps to your database schema
+type ProfileFromDB = Tables<"profiles">;
 
 interface AuthContextType {
   user: User | null;
-  loading: boolean;
-  signIn: (email: string, password: string) => Promise<boolean>;
-  signUp: (email: string, password: string, userData: any) => Promise<void>;
+  profile: UserProfile | null;
+  signUp: (
+    email: string,
+    password: string,
+    userData: Partial<UserProfile>
+  ) => Promise<void>;
+  signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
+  loading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
-  const { toast } = useToast();
+
+  const fetchProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", userId)
+        .single();
+
+      if (error) {
+        console.error("Error fetching profile:", error);
+        return null;
+      }
+
+      // Convert the database profile to UserProfile type
+      const userProfile: UserProfile = {
+        id: data.id,
+        email: data.email,
+        first_name: data.first_name,
+        last_name: data.last_name,
+        company_name: data.company_name,
+        role: data.role as UserRole,
+      };
+
+      setProfile(userProfile);
+      return userProfile;
+    } catch (error) {
+      console.error("Exception fetching profile:", error);
+      return null;
+    }
+  };
 
   useEffect(() => {
-    // Check active sessions and sets up auth subscription
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    // Check active sessions and subscribe to auth changes
+    const initializeAuth = async () => {
+      setLoading(true);
+      
+      const { data: { session } } = await supabase.auth.getSession();
       setUser(session?.user ?? null);
+      
+      if (session?.user) {
+        await fetchProfile(session.user.id);
+      }
+      
       setLoading(false);
-    });
+    };
+    
+    initializeAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
       setUser(session?.user ?? null);
+      
+      if (session?.user) {
+        await fetchProfile(session.user.id);
+      } else {
+        setProfile(null);
+      }
+      
+      setLoading(false);
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
-  const signIn = async (email: string, password: string): Promise<boolean> => {
+  const signUp = async (
+    email: string,
+    password: string,
+    userData: Partial<UserProfile>
+  ) => {
     try {
+      setLoading(true);
+      
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+
+      if (error) throw error;
+
+      if (data.user) {
+        // Create profile
+        const profileData = {
+          id: data.user.id,
+          email,
+          role: (userData.role || 'user') as UserRole,
+          first_name: userData.first_name || '',
+          last_name: userData.last_name || '',
+          company_name: userData.company_name || '',
+        };
+
+        const { error: profileError } = await supabase
+          .from("profiles")
+          .insert([profileData]);
+
+        if (profileError) throw profileError;
+        
+        // Explicitly fetch the profile after creating it
+        await fetchProfile(data.user.id);
+      }
+    } catch (error) {
+      console.error("Signup error:", error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const signIn = async (email: string, password: string) => {
+    try {
+      setLoading(true);
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      if (error) {
-        toast({
-          title: "Login failed",
-          description: error.message,
-          variant: "destructive",
-        });
-        console.error("Login error:", error);
-        return false;
-      }
-
-      if (data?.user) {
-        navigate('/dashboard');
-        toast({
-          title: "Welcome back!",
-          description: "You've successfully signed in.",
-        });
-        return true;
-      }
-      
-      return false;
-    } catch (error: any) {
-      toast({
-        title: "Error signing in",
-        description: error.message,
-        variant: "destructive",
-      });
-      console.error("Sign-in exception:", error);
-      return false;
-    }
-  };
-
-  const signUp = async (email: string, password: string, userData: any) => {
-    try {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            first_name: userData.firstName,
-            last_name: userData.lastName,
-            is_company: userData.isCompany,
-            company_name: userData.companyName,
-          },
-        },
-      });
-
       if (error) throw error;
-
-      toast({
-        title: "Welcome to PARKACCESS!",
-        description: "Please check your email to confirm your account.",
-      });
-      navigate('/login');
-    } catch (error: any) {
-      toast({
-        title: "Error signing up",
-        description: error.message,
-        variant: "destructive",
-      });
+      
+      // Ensure profile is loaded immediately after sign in
+      if (data.user) {
+        await fetchProfile(data.user.id);
+      }
+    } catch (error) {
+      console.error("Sign in error:", error);
+      throw error;
+    } finally {
+      setLoading(false);
     }
   };
 
   const signOut = async () => {
     try {
+      setLoading(true);
+      
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
-      navigate('/');
-      toast({
-        title: "Signed out successfully",
-        description: "Hope to see you again soon!",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error signing out",
-        description: error.message,
-        variant: "destructive",
-      });
+      
+      setProfile(null);
+    } catch (error) {
+      console.error("Sign out error:", error);
+      throw error;
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, signIn, signUp, signOut }}>
+    <AuthContext.Provider
+      value={{ user, profile, signUp, signIn, signOut, loading }}
+    >
       {children}
     </AuthContext.Provider>
   );
-};
+}
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };

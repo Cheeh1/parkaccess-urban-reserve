@@ -1,12 +1,16 @@
-
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import ParkingLotHeader from './ParkingLotHeader';
-import ParkingLotDetails from './ParkingLotDetails';
-import ParkingLocationMap from './ParkingLocationMap';
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import ParkingLotHeader from "./ParkingLotHeader";
+import ParkingLotDetails from "./ParkingLotDetails";
+import ParkingLocationMap from "./ParkingLocationMap";
 
 interface ParkingLotCardProps {
   id: string;
@@ -33,57 +37,40 @@ const ParkingLotCard = ({
 }: ParkingLotCardProps) => {
   const navigate = useNavigate();
   const [showDetails, setShowDetails] = React.useState(false);
-  
+
   const handleReserve = () => {
-    const reservation = {
-      parkingLotName: name,
-      spotId: spotId,
-      date: new Date().toISOString().split('T')[0],
-      startTime: '10:00',
-      endTime: '12:00',
-      totalPrice: price,
-    };
-    
-    navigate('/checkout', { state: { reservation } });
+    navigate(`/book/${id}`);
   };
-  
+
   return (
     <>
       <Card className="overflow-hidden">
         <div className="relative aspect-video">
-          <img
-            src={image}
-            alt={name}
-            className="w-full h-full object-cover"
-          />
+          <img src={image} alt={name} className="w-full h-full object-cover" />
         </div>
         <CardContent className="p-6">
-          <ParkingLotHeader 
-            name={name} 
-            address={address} 
-            price={price} 
-          />
-          
-          <ParkingLotDetails 
+          <ParkingLotHeader name={name} address={address} price={price} />
+
+          <ParkingLotDetails
             availableSpots={availableSpots}
             totalSpots={totalSpots}
             distance={distance}
           />
-          
+
           <div className="flex gap-2">
-            <Button 
+            <Button
               variant="outline"
               className="flex-1"
               onClick={() => setShowDetails(true)}
             >
               View Details
             </Button>
-            <Button 
+            <Button
               className="flex-1"
               onClick={handleReserve}
               disabled={availableSpots === 0}
             >
-              {availableSpots === 0 ? 'No Spots Available' : 'Reserve Spot'}
+              {availableSpots === 0 ? "No Spots Available" : "Book Now"}
             </Button>
           </div>
         </CardContent>
@@ -95,7 +82,7 @@ const ParkingLotCard = ({
             <DialogTitle>{name}</DialogTitle>
           </DialogHeader>
           <div className="h-[300px] mb-4">
-            <ParkingLocationMap 
+            <ParkingLocationMap
               location={{
                 name,
                 address,

@@ -1,75 +1,95 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { MapPin, Calendar, Clock, Car } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { MapPin, Clock, Calendar } from 'lucide-react';
+
+interface ParkingLot {
+  _id: string;
+  name: string;
+  location: string;
+  totalSpots: number;
+  hourlyRate: number;
+  images: string[];
+  createdBy: {
+    _id: string;
+    fullName: string;
+    email: string;
+  };
+  createdAt: string;
+}
+
+interface ReservationData {
+  date: string;
+  startTime: string;
+  endTime: string;
+  totalPrice: number;
+}
 
 interface ParkingLotSummaryProps {
-  reservation: {
-    parkingLotName: string;
-    spotId: string;
-    date: string;
-    startTime: string;
-    endTime: string;
-    totalPrice: number;
-  };
+  parkingLot: ParkingLot;
+  reservation: ReservationData;
   showPaymentButton?: boolean;
   onPaymentClick?: () => void;
 }
 
-const ParkingLotSummary = ({ reservation, showPaymentButton = false, onPaymentClick }: ParkingLotSummaryProps) => {
+const ParkingLotSummary = ({
+  parkingLot,
+  reservation,
+  showPaymentButton = true,
+  onPaymentClick,
+}: ParkingLotSummaryProps) => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg">Booking Summary</CardTitle>
+        <CardTitle>Reservation Summary</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="space-y-2">
-          <div className="flex items-start gap-2">
-            <MapPin className="h-4 w-4 mt-1 text-muted-foreground" />
-            <div>
-              <p className="font-medium">{reservation.parkingLotName}</p>
-              <p className="text-sm text-muted-foreground">Spot {reservation.spotId}</p>
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <Calendar className="h-4 w-4 text-muted-foreground" />
-            <p className="text-sm">{new Date(reservation.date).toLocaleDateString()}</p>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <Clock className="h-4 w-4 text-muted-foreground" />
-            <p className="text-sm">{reservation.startTime} - {reservation.endTime}</p>
-          </div>
+        <div className="aspect-video relative rounded-lg overflow-hidden">
+          <img
+            src={parkingLot.images[0] || '/placeholder.svg'}
+            alt={parkingLot.name}
+            className="w-full h-full object-cover"
+          />
         </div>
         
-        <Separator />
-        
+        <div>
+          <h3 className="font-semibold text-lg">{parkingLot.name}</h3>
+          <p className="text-gray-600 flex items-center mt-1">
+            <MapPin className="h-4 w-4 mr-2" />
+            {parkingLot.location}
+          </p>
+        </div>
+
         <div className="space-y-2">
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Parking fee</span>
-            <span>₦{reservation.totalPrice}</span>
+          <div className="flex items-center text-gray-600">
+            <Calendar className="h-4 w-4 mr-2" />
+            <span>{reservation.date}</span>
           </div>
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Service fee</span>
-            <span>₦0</span>
+          <div className="flex items-center text-gray-600">
+            <Clock className="h-4 w-4 mr-2" />
+            <span>{reservation.startTime} - {reservation.endTime}</span>
           </div>
-          <Separator />
-          <div className="flex justify-between font-medium">
+        </div>
+
+        <div className="border-t pt-4">
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-gray-600">Hourly Rate</span>
+            <span>₦{parkingLot.hourlyRate}/hour</span>
+          </div>
+          <div className="flex justify-between items-center font-semibold">
             <span>Total</span>
             <span>₦{reservation.totalPrice}</span>
           </div>
-          
-          {showPaymentButton && (
-            <Button 
-              onClick={onPaymentClick}
-              className="w-full mt-4"
-            >
-              Pay ₦{reservation.totalPrice}
-            </Button>
-          )}
         </div>
+
+        {showPaymentButton && onPaymentClick && (
+          <Button 
+            onClick={onPaymentClick}
+            className="w-full mt-4"
+          >
+            Proceed to Payment
+          </Button>
+        )}
       </CardContent>
     </Card>
   );

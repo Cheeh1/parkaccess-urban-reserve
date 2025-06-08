@@ -1,8 +1,9 @@
-
 import React from "react";
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Calendar, CreditCard, Settings, LogOut } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useToast } from "@/components/ui/use-toast";
 
 interface DashboardSidebarProps {
   user: {
@@ -16,6 +17,24 @@ interface DashboardSidebarProps {
 }
 
 const DashboardSidebar = ({ user, activeTab, setActiveTab }: DashboardSidebarProps) => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const handleLogout = () => {
+    // Clear local storage
+    localStorage.removeItem('token');
+    localStorage.removeItem('id');
+    
+    // Show success toast
+    toast({
+      title: "Logged out successfully",
+      description: "You have been logged out of your account.",
+    });
+
+    // Redirect to login page
+    navigate('/login');
+  };
+
   return (
     <div className="w-full md:w-1/4">
       <div className="bg-white rounded-lg shadow-lg p-6">
@@ -39,14 +58,14 @@ const DashboardSidebar = ({ user, activeTab, setActiveTab }: DashboardSidebarPro
             <Calendar className="mr-2 h-4 w-4" />
             My Reservations
           </Button>
-          <Button 
+          {/* <Button 
             variant={activeTab === 'payment' ? 'default' : 'ghost'} 
             className="w-full justify-start"
             onClick={() => setActiveTab('payment')}
           >
             <CreditCard className="mr-2 h-4 w-4" />
             Payment Methods
-          </Button>
+          </Button> */}
           <Button 
             variant={activeTab === 'profile' ? 'default' : 'ghost'} 
             className="w-full justify-start"
@@ -58,9 +77,7 @@ const DashboardSidebar = ({ user, activeTab, setActiveTab }: DashboardSidebarPro
           <Button 
             variant="ghost" 
             className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-50"
-            onClick={() => {
-              // Handle logout
-            }}
+            onClick={handleLogout}
           >
             <LogOut className="mr-2 h-4 w-4" />
             Sign Out

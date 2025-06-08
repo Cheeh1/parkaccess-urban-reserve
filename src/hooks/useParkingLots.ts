@@ -1,58 +1,80 @@
+import { useState, useEffect } from "react";
+import { getApiBaseUrl } from "@/utils/api";
 
-import { useState, useEffect } from 'react';
-import { mockParkingLots, ParkingLot } from '@/utils/parkingData';
-
-export const useParkingLots = (
-  priceRange: number[],
-  minDistance: number,
-  maxDistance: number,
-  selectedAmenities: string[],
-  availability: number,
-  sortOption: string
-) => {
-  const [parkingLots, setParkingLots] = useState<ParkingLot[]>(mockParkingLots);
-  const [filteredLots, setFilteredLots] = useState<ParkingLot[]>(mockParkingLots);
-
-  const applyFilters = () => {
-    let filtered = [...parkingLots];
-    
-    filtered = filtered.filter(lot => lot.price >= priceRange[0] && lot.price <= priceRange[1]);
-    
-    filtered = filtered.filter(lot => {
-      const distanceValue = parseFloat(lot.distance);
-      return distanceValue >= minDistance && distanceValue <= maxDistance;
-    });
-    
-    if (selectedAmenities.length > 0) {
-      filtered = filtered.filter(lot => 
-        selectedAmenities.every(amenity => lot.amenities.includes(amenity))
-      );
-    }
-    
-    filtered = filtered.filter(lot => lot.availableSpots >= availability);
-    
-    filtered.sort((a, b) => {
-      switch (sortOption) {
-        case 'price_low':
-          return a.price - b.price;
-        case 'price_high':
-          return b.price - a.price;
-        case 'rating':
-          return b.rating - a.rating;
-        case 'availability':
-          return b.availableSpots - a.availableSpots;
-        case 'distance':
-        default:
-          return parseFloat(a.distance) - parseFloat(b.distance);
-      }
-    });
-    
-    setFilteredLots(filtered);
+interface ParkingLot {
+  _id: string;
+  name: string;
+  location: string;
+  totalSpots: number;
+  hourlyRate: number;
+  images: string[];
+  createdBy: {
+    _id: string;
+    fullName: string;
+    email: string;
   };
+  createdAt: string;
+}
+
+interface SearchParams {
+  location?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  date?: string;
+  entryTime?: string;
+  exitTime?: string;
+  trigger: number;
+}
+
+export const useParkingLots = (searchParams: SearchParams) => {
+  const [parkingLots, setParkingLots] = useState<ParkingLot[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    applyFilters();
-  }, [priceRange, minDistance, maxDistance, selectedAmenities, availability, sortOption]);
+    const fetchParkingLots = async () => {
+      try {
+        setLoading(true);
+        const queryParams = new URLSearchParams();
 
-  return { parkingLots, filteredLots };
+        if (searchParams.location)
+          queryParams.append("location", searchParams.location);
+        if (searchParams.minPrice)
+          queryParams.append("minPrice", searchParams.minPrice.toString());
+        if (searchParams.maxPrice)
+          queryParams.append("maxPrice", searchParams.maxPrice.toString());
+        if (searchParams.date) queryParams.append("date", searchParams.date);
+        if (searchParams.entryTime)
+          queryParams.append("entryTime", searchParams.entryTime);
+        if (searchParams.exitTime)
+          queryParams.append("exitTime", searchParams.exitTime);
+
+        const baseUrl = getApiBaseUrl();
+        const endpoint = queryParams.toString()
+          ? `${baseUrl}/parking-lots/search?${queryParams.toString()}`
+          : `${baseUrl}/parking-lots`;
+
+        const response = await fetch(endpoint);
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch parking lots");
+        }
+
+        const result = await response.json();
+        setParkingLots(result.data || []);
+        setError(null);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "An error occurred");
+        setParkingLots([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (searchParams.trigger >= 0) {
+      fetchParkingLots();
+    }
+  }, [searchParams.trigger]);
+
+  return { parkingLots, loading, error };
 };

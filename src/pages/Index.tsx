@@ -35,7 +35,7 @@ const Index = () => {
               <Button 
                 onClick={() => navigate('/parking-lots')}
                 size="lg" 
-                className="bg-white text-parking-primary hover:bg-gray-100 px-6"
+                className="bg-white text-parking-primary hover:bg-parking-primary hover:text-white hover:border px-6"
               >
                 Find Parking
               </Button>
@@ -43,7 +43,7 @@ const Index = () => {
                 onClick={() => navigate('/how-it-works')}
                 variant="outline" 
                 size="lg"
-                className="border-white text-white hover:bg-white/10"
+                className="hover:border-white hover:text-parking-primary hover:bg-white bg-parking-primary"
               >
                 How It Works
               </Button>
@@ -83,7 +83,7 @@ const Index = () => {
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
                     className="parking-input"
-                    required
+                    // required
                   />
                 </div>
                 
@@ -98,7 +98,7 @@ const Index = () => {
                     value={entryTime}
                     onChange={(e) => setEntryTime(e.target.value)}
                     className="parking-input"
-                    required
+                    // required
                   />
                 </div>
                 
@@ -113,7 +113,7 @@ const Index = () => {
                     value={exitTime}
                     onChange={(e) => setExitTime(e.target.value)}
                     className="parking-input"
-                    required
+                    // required
                   />
                 </div>
                 
@@ -286,7 +286,7 @@ const Index = () => {
             <Button 
               onClick={() => navigate('/sign-up')}
               size="lg" 
-              className="bg-white text-parking-primary hover:bg-gray-100"
+              className="bg-white text-parking-primary hover:bg-parking-primary hover:text-white hover:border px-"
             >
               Sign Up Now
             </Button>
@@ -294,7 +294,7 @@ const Index = () => {
               onClick={() => navigate('/parking-lots')}
               variant="outline" 
               size="lg"
-              className="border-white text-white hover:bg-white/10"
+              className="hover:border-white hover:text-parking-primary hover:bg-white bg-parking-primary"
             >
               Find Parking
             </Button>

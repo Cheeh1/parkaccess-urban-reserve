@@ -1,8 +1,4 @@
-
 import { useToast } from "@/hooks/use-toast";
-
-// This is a public key and safe to include in client-side code
-const PAYSTACK_PUBLIC_KEY = "pk_test_01033bf4f3d23225b5b460b905aca509f4368966";
 
 export interface PaystackConfig {
   email: string;
@@ -15,11 +11,12 @@ export interface PaystackConfig {
 
 export const initializePaystack = (config: PaystackConfig) => {
   // Create a random reference if not provided
-  const reference = config.reference || `ref-${Math.floor(Math.random() * 1000000000)}`;
-  
+  const reference =
+    config.reference || `ref-${Math.floor(Math.random() * 1000000000)}`;
+
   // Create a new Paystack instance
   const handler = (window as any).PaystackPop?.setup({
-    key: PAYSTACK_PUBLIC_KEY,
+    key: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY,
     email: config.email,
     amount: config.amount, // In kobo
     ref: reference,
@@ -31,19 +28,19 @@ export const initializePaystack = (config: PaystackConfig) => {
       config.onCancel();
     },
   });
-  
+
   // Open the payment modal
   if (handler) {
     handler.openIframe();
     return true;
   }
-  
+
   return false;
 };
 
 export const usePaystackPayment = () => {
   const { toast } = useToast();
-  
+
   const initiatePayment = (config: PaystackConfig) => {
     // Check if Paystack SDK is loaded
     if (!(window as any).PaystackPop) {
@@ -54,9 +51,9 @@ export const usePaystackPayment = () => {
       });
       return false;
     }
-    
+
     return initializePaystack(config);
   };
-  
+
   return { initiatePayment };
 };

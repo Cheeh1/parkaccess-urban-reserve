@@ -5,8 +5,22 @@ import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { companySchema } from "@/utils/validationSchema";
 import { Building, Lock, Mail } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
+import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { getApiBaseUrl } from "@/utils/api";
+
+interface CompanyFormData {
+  companyName: string;
+  companyEmail: string;
+  companyPassword: string;
+}
 
 export const CompanySignUpForm = () => {
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+
   const {
     register,
     handleSubmit,
@@ -15,8 +29,50 @@ export const CompanySignUpForm = () => {
     resolver: yupResolver(companySchema),
   });
 
-  const onSubmit = async (data) => {
-    console.log(data);
+  const onSubmit = async (data: CompanyFormData) => {
+    try {
+      setLoading(true);
+      const baseUrl = getApiBaseUrl();
+      const response = await fetch(`${baseUrl}/auth/register`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          fullName: data.companyName,
+          email: data.companyEmail,
+          password: data.companyPassword,
+          role: "company",
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Registration failed");
+      }
+
+      const result = await response.json();
+
+      toast({
+        title: "Registration successful!",
+        description: "Your company account has been created.",
+      });
+
+      localStorage.setItem("token", result.token);
+      navigate("/login");
+    } catch (error: Error | unknown) {
+      console.error("Registration error:", error);
+      toast({
+        title: "Registration failed",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Failed to create company account. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -73,10 +129,9 @@ export const CompanySignUpForm = () => {
         <Button
           type="submit"
           className="w-full bg-parking-secondary hover:bg-parking-primary h-11"
-        //   disabled={loading}
+          disabled={loading}
         >
-          {/* {loading ? "Creating Company Account..." : "Sign Up as Company"} */}
-          Sign Up as Company
+          {loading ? "Creating Company Account..." : "Sign Up as Company"}
         </Button>
       </div>
     </form>

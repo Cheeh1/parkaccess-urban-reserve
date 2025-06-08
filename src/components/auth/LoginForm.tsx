@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import {
@@ -16,10 +16,14 @@ import { Car, Eye, EyeOff, Lock, Mail } from "lucide-react";
 import SocialLoginButtons from "@/components/auth/SocialLoginButtons";
 import { useToast } from "@/components/ui/use-toast";
 import { loginSchema } from "@/utils/validationSchema";
+import { useAuth } from "@/contexts/AuthContext";
 
 const LoginForm = () => {
   const [showPassword, setShowPassword] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { signIn } = useAuth();
 
   const {
     register,
@@ -29,27 +33,30 @@ const LoginForm = () => {
     resolver: yupResolver(loginSchema),
   });
 
-  // const handleLogin = async (data: { email: string; password: string }) => {
-  //   try {
-  //     const result = await signIn(data.email, data.password);
-  //     if (!result) return;
+  const onSubmit = async (data: { email: string; password: string }) => {
+    try {
+      await signIn(data.email, data.password);
 
-  //     toast({
-  //       title: "Login successful!",
-  //       description: "Welcome back to PARKACCESS.",
-  //     });
-  //   } catch (error: Error | unknown) {
-  //     console.error("Login error:", error);
-  //     toast({
-  //       title: "Login failed",
-  //       description:
-  //         error instanceof Error
-  //           ? error.message
-  //           : "Invalid login credentials. Please try again.",
-  //       variant: "destructive",
-  //     });
-  //   }
-  // };
+      toast({
+        title: "Login successful!",
+        description: "Welcome back to PARKACCESS.",
+      });
+
+      // Check if user was trying to access a protected route before login
+      const from = location.state?.from?.pathname || "/dashboard";
+      navigate(from, { replace: true });
+    } catch (error: Error | unknown) {
+      console.error("Login error:", error);
+      toast({
+        title: "Login failed",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Invalid login credentials. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <div className="max-w-md w-full">
@@ -69,7 +76,7 @@ const LoginForm = () => {
           <CardTitle className="text-center">Sign In</CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit(handleLogin)} className="space-y-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <div className="relative">

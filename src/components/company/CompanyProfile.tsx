@@ -1,49 +1,129 @@
-
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { useToast } from '@/components/ui/use-toast';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-
-interface Company {
-  name: string;
-  email: string;
-  phone: string;
-  address: string;
-  logo: string;
-  joinDate: string;
-}
+import React, { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/components/ui/use-toast";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useAuth } from "@/hooks/useAuth";
+import { useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import { changePasswordSchema } from "@/utils/validationSchema";
+import { getApiBaseUrl } from "@/utils/api";
 
 interface CompanyProfileProps {
-  company: Company;
+  company: {
+    name: string;
+    email: string;
+    phone: string;
+    address: string;
+    logo: string;
+    joinDate: string;
+  };
+}
+
+interface ChangePasswordFormData {
+  oldPassword?: string;
+  newPassword?: string;
+  confirmPassword?: string;
 }
 
 const CompanyProfile = ({ company }: CompanyProfileProps) => {
   const { toast } = useToast();
+  const { userData } = useAuth();
   const [formData, setFormData] = useState({
-    name: company.name,
-    email: company.email,
+    name: userData?.fullName || company.name,
+    email: userData?.email || company.email,
     phone: company.phone,
     address: company.address,
-    description: "We provide premium parking solutions for businesses and public areas across the city.",
+    description:
+      "We provide premium parking solutions for businesses and public areas across the city.",
     taxId: "TAX-123456789",
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const {
+    register: registerPassword,
+    handleSubmit: handlePasswordSubmit,
+    formState: { errors: passwordErrors, isSubmitting: isPasswordSubmitting },
+    reset: resetPasswordForm,
+  } = useForm<ChangePasswordFormData>({
+    resolver: yupResolver(changePasswordSchema),
+  });
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Here you would make an API call to update the company profile
-    toast({
-      title: "Profile Updated",
-      description: "Your company profile has been successfully updated.",
-    });
+    try {
+      const token = localStorage.getItem("token");
+      const baseUrl = getApiBaseUrl();
+      const response = await fetch(`${baseUrl}/auth/update-profile`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update profile");
+      }
+
+      toast({
+        title: "Profile Updated",
+        description: "Your company profile has been successfully updated.",
+      });
+    } catch (error) {
+      toast({
+        title: "Update Failed",
+        description:
+          error instanceof Error ? error.message : "Failed to update profile",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const onPasswordSubmit = async (data: ChangePasswordFormData) => {
+    try {
+      const token = localStorage.getItem("token");
+      const baseUrl = getApiBaseUrl();
+      const response = await fetch(`${baseUrl}/auth/change-password`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          oldPassword: data.oldPassword,
+          newPassword: data.newPassword,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to change password");
+      }
+
+      toast({
+        title: "Password Updated",
+        description: "Your password has been successfully changed.",
+      });
+      resetPasswordForm();
+    } catch (error) {
+      toast({
+        title: "Password Update Failed",
+        description:
+          error instanceof Error ? error.message : "Failed to change password",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -70,7 +150,7 @@ const CompanyProfile = ({ company }: CompanyProfileProps) => {
                 </p>
               </div>
             </div>
-            
+
             <div className="flex-1">
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -83,19 +163,7 @@ const CompanyProfile = ({ company }: CompanyProfileProps) => {
                       onChange={handleChange}
                     />
                   </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="taxId">Tax ID / Business Registration</Label>
-                    <Input
-                      id="taxId"
-                      name="taxId"
-                      value={formData.taxId}
-                      onChange={handleChange}
-                    />
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
                   <div className="space-y-2">
                     <Label htmlFor="email">Email Address</Label>
                     <Input
@@ -104,20 +172,11 @@ const CompanyProfile = ({ company }: CompanyProfileProps) => {
                       type="email"
                       value={formData.email}
                       onChange={handleChange}
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">Phone Number</Label>
-                    <Input
-                      id="phone"
-                      name="phone"
-                      value={formData.phone}
-                      onChange={handleChange}
+                      disabled
                     />
                   </div>
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="address">Address</Label>
                   <Input
@@ -127,7 +186,7 @@ const CompanyProfile = ({ company }: CompanyProfileProps) => {
                     onChange={handleChange}
                   />
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="description">Company Description</Label>
                   <Textarea
@@ -138,7 +197,7 @@ const CompanyProfile = ({ company }: CompanyProfileProps) => {
                     onChange={handleChange}
                   />
                 </div>
-                
+
                 <div className="flex justify-end">
                   <Button type="submit">Save Changes</Button>
                 </div>
@@ -147,34 +206,66 @@ const CompanyProfile = ({ company }: CompanyProfileProps) => {
           </div>
         </CardContent>
       </Card>
-      
+
       <Card>
         <CardHeader>
           <CardTitle>Security Settings</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
+          <form
+            onSubmit={handlePasswordSubmit(onPasswordSubmit)}
+            className="space-y-4"
+          >
             <div className="space-y-2">
               <Label htmlFor="current-password">Current Password</Label>
-              <Input id="current-password" type="password" />
+              <Input
+                id="current-password"
+                type="password"
+                {...registerPassword("oldPassword")}
+              />
+              {passwordErrors.oldPassword && (
+                <p className="text-red-500 text-xs">
+                  {passwordErrors.oldPassword.message}
+                </p>
+              )}
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="new-password">New Password</Label>
-                <Input id="new-password" type="password" />
+                <Input
+                  id="new-password"
+                  type="password"
+                  {...registerPassword("newPassword")}
+                />
+                {passwordErrors.newPassword && (
+                  <p className="text-red-500 text-xs">
+                    {passwordErrors.newPassword.message}
+                  </p>
+                )}
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="confirm-password">Confirm Password</Label>
-                <Input id="confirm-password" type="password" />
+                <Input
+                  id="confirm-password"
+                  type="password"
+                  {...registerPassword("confirmPassword")}
+                />
+                {passwordErrors.confirmPassword && (
+                  <p className="text-red-500 text-xs">
+                    {passwordErrors.confirmPassword.message}
+                  </p>
+                )}
               </div>
             </div>
-            
+
             <div className="flex justify-end">
-              <Button variant="outline">Update Password</Button>
+              <Button type="submit" disabled={isPasswordSubmitting}>
+                {isPasswordSubmitting ? "Updating..." : "Update Password"}
+              </Button>
             </div>
-          </div>
+          </form>
         </CardContent>
       </Card>
     </div>

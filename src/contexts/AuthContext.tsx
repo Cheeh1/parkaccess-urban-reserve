@@ -1,14 +1,20 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { User } from "@supabase/supabase-js";
-import { supabase } from "@/lib/supabase";
 import { UserProfile, UserRole } from "@/types/auth";
-import { Tables } from "@/integrations/supabase/types"; // Make sure to import from wherever you placed the types file
+import { getApiBaseUrl } from "@/utils/api";
 
-// You can also define a more specific profile type that maps to your database schema
-type ProfileFromDB = Tables<"profiles">;
+// Custom user type for our backend
+interface CustomUser {
+  id: string;
+  email: string;
+  fullName?: string;
+  role: UserRole;
+  first_name?: string;
+  last_name?: string;
+  company_name?: string;
+}
 
 interface AuthContextType {
-  user: User | null;
+  user: CustomUser | null;
   profile: UserProfile | null;
   signUp: (
     email: string,
@@ -23,33 +29,48 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<CustomUser | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchProfile = async (userId: string) => {
+  const fetchUserProfile = async (token: string) => {
     try {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", userId)
-        .single();
+      const baseUrl = getApiBaseUrl();
+      const response = await fetch(`${baseUrl}/auth/profile`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
 
-      if (error) {
-        console.error("Error fetching profile:", error);
-        return null;
+      if (!response.ok) {
+        throw new Error("Failed to fetch profile");
       }
 
-      // Convert the database profile to UserProfile type
-      const userProfile: UserProfile = {
-        id: data.id,
-        email: data.email,
-        first_name: data.first_name,
-        last_name: data.last_name,
-        company_name: data.company_name,
-        role: data.role as UserRole,
+      const data = await response.json();
+
+      // Create user object
+      const userData: CustomUser = {
+        id: data.data._id,
+        email: data.data.email,
+        fullName: data.data.fullName,
+        role: data.data.role as UserRole,
+        first_name: data.data.firstName,
+        last_name: data.data.lastName,
+        company_name: data.data.companyName,
       };
 
+      // Create profile object
+      const userProfile: UserProfile = {
+        id: data.data._id,
+        email: data.data.email,
+        first_name: data.data.firstName || "",
+        last_name: data.data.lastName || "",
+        company_name: data.data.companyName || "",
+        role: data.data.role as UserRole,
+      };
+
+      setUser(userData);
       setProfile(userProfile);
       return userProfile;
     } catch (error) {
@@ -59,37 +80,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    // Check active sessions and subscribe to auth changes
+    // Check for existing token on app load
     const initializeAuth = async () => {
       setLoading(true);
-      
-      const { data: { session } } = await supabase.auth.getSession();
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        await fetchProfile(session.user.id);
+
+      const token = localStorage.getItem("token");
+      if (token) {
+        try {
+          await fetchUserProfile(token);
+        } catch (error) {
+          // Token might be invalid, clear it
+          localStorage.removeItem("token");
+          localStorage.removeItem("id");
+        }
       }
-      
+
       setLoading(false);
     };
-    
+
     initializeAuth();
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        await fetchProfile(session.user.id);
-      } else {
-        setProfile(null);
-      }
-      
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
   }, []);
 
   const signUp = async (
@@ -99,34 +108,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   ) => {
     try {
       setLoading(true);
-      
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
+
+      const baseUrl = getApiBaseUrl();
+      const response = await fetch(`${baseUrl}/auth/register`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          fullName: `${userData.first_name || ""} ${
+            userData.last_name || ""
+          }`.trim(),
+          email,
+          password,
+          role: userData.role || "user",
+          firstName: userData.first_name,
+          lastName: userData.last_name,
+          companyName: userData.company_name,
+        }),
       });
 
-      if (error) throw error;
-
-      if (data.user) {
-        // Create profile
-        const profileData = {
-          id: data.user.id,
-          email,
-          role: (userData.role || 'user') as UserRole,
-          first_name: userData.first_name || '',
-          last_name: userData.last_name || '',
-          company_name: userData.company_name || '',
-        };
-
-        const { error: profileError } = await supabase
-          .from("profiles")
-          .insert([profileData]);
-
-        if (profileError) throw profileError;
-        
-        // Explicitly fetch the profile after creating it
-        await fetchProfile(data.user.id);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Registration failed");
       }
+
+      const result = await response.json();
+
+      // Don't auto-login after signup, let them verify email first
+      console.log("Registration successful:", result);
     } catch (error) {
       console.error("Signup error:", error);
       throw error;
@@ -138,18 +148,49 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signIn = async (email: string, password: string) => {
     try {
       setLoading(true);
-      
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+
+      const baseUrl = getApiBaseUrl();
+      const response = await fetch(`${baseUrl}/auth/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
       });
 
-      if (error) throw error;
-      
-      // Ensure profile is loaded immediately after sign in
-      if (data.user) {
-        await fetchProfile(data.user.id);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Login failed");
       }
+
+      const result = await response.json();
+
+      // Store token and user ID
+      localStorage.setItem("token", result.token);
+      localStorage.setItem("id", result.data._id);
+
+      // Create user and profile objects
+      const userData: CustomUser = {
+        id: result.data._id,
+        email: result.data.email,
+        fullName: result.data.fullName,
+        role: result.data.role as UserRole,
+        first_name: result.data.firstName,
+        last_name: result.data.lastName,
+        company_name: result.data.companyName,
+      };
+
+      const userProfile: UserProfile = {
+        id: result.data._id,
+        email: result.data.email,
+        first_name: result.data.firstName || "",
+        last_name: result.data.lastName || "",
+        company_name: result.data.companyName || "",
+        role: result.data.role as UserRole,
+      };
+
+      setUser(userData);
+      setProfile(userProfile);
     } catch (error) {
       console.error("Sign in error:", error);
       throw error;
@@ -161,10 +202,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = async () => {
     try {
       setLoading(true);
-      
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      
+
+      // Clear local storage
+      localStorage.removeItem("token");
+      localStorage.removeItem("id");
+
+      // Clear state
+      setUser(null);
       setProfile(null);
     } catch (error) {
       console.error("Sign out error:", error);

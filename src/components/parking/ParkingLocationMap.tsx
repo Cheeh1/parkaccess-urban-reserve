@@ -18,7 +18,7 @@ const ParkingLocationMap = ({ location }: ParkingLocationMapProps) => {
   const initializeMap = () => {
     if (!mapContainer.current) return;
     
-    mapboxgl.accessToken = 'pk.eyJ1IjoiaGFkaW1pcjIyIiwiYSI6ImNqeHc0dTZxajBiNHozaHA4NGJ3dzdjZ3cifQ.8hK4ePzKqcqVZO041M4SUA';
+    mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
     
     if (map.current) return;
 

@@ -1,64 +1,188 @@
+import React, { useState, useEffect } from "react";
+import MainLayout from "@/components/layout/MainLayout";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  PieChart,
+  Pie,
+  Cell,
+} from "recharts";
+import CompanyProfile from "@/components/company/CompanyProfile";
+import BookingHistory from "@/components/company/BookingHistory";
+import ParkingSpaces from "@/components/company/ParkingSpaces";
+import { useAuth } from "@/contexts/AuthContext";
+import { analyticsApi } from "@/utils/api";
+import { useToast } from "@/hooks/use-toast";
 
-import React, { useState } from 'react';
-import MainLayout from '@/components/layout/MainLayout';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
-import CompanyProfile from '@/components/company/CompanyProfile';
-import BookingHistory from '@/components/company/BookingHistory';
-import ParkingSpaces from '@/components/company/ParkingSpaces';
+interface AnalyticsSummary {
+  currentMonth: {
+    revenue: {
+      total: number;
+      growthPercentage: number;
+      previousMonth: number;
+    };
+    bookings: {
+      total: number;
+      growthPercentage: number;
+      previousMonth: number;
+    };
+    customers: {
+      total: number;
+      newCustomers: number;
+      returningCustomers: number;
+    };
+  };
+  occupancy: {
+    currentOccupancy: number;
+    totalSpots: number;
+    occupiedSpots: number;
+    availableSpots: number;
+    occupancyPercentage: number;
+  };
+}
 
-// Mock company data
-const company = {
-  name: "ParkEasy Solutions",
-  email: "info@parkeasy.com",
-  phone: "+234 812 345 6789",
-  address: "15 Unity Road, Ilorin, Nigeria",
-  logo: "",
-  joinDate: "2023-05-10",
-};
+interface RevenueChartData {
+  month: string;
+  revenue: number;
+  bookings: number;
+}
 
-// Mock revenue data
-const revenueData = [
-  { name: 'Jan', amount: 21000 },
-  { name: 'Feb', amount: 24000 },
-  { name: 'Mar', amount: 18000 },
-  { name: 'Apr', amount: 26000 },
-  { name: 'May', amount: 30000 },
-  { name: 'Jun', amount: 31500 },
-  { name: 'Jul', amount: 34000 },
-];
-
-// Mock booking data
-const bookingData = [
-  { name: 'Jan', bookings: 120 },
-  { name: 'Feb', bookings: 148 },
-  { name: 'Mar', bookings: 110 },
-  { name: 'Apr', bookings: 178 },
-  { name: 'May', bookings: 190 },
-  { name: 'Jun', bookings: 205 },
-  { name: 'Jul', bookings: 217 },
-];
-
-// Mock occupancy data
-const occupancyData = [
-  { name: 'Occupied', value: 75 },
-  { name: 'Available', value: 25 },
-];
-
-const COLORS = ['#0088FE', '#ECEFF1'];
+const COLORS = ["#0088FE", "#ECEFF1"];
 
 const CompanyDashboard = () => {
-  const [activeTab, setActiveTab] = useState('analytics');
-  
+  const [activeTab, setActiveTab] = useState("analytics");
+  const [analyticsData, setAnalyticsData] = useState<AnalyticsSummary | null>(
+    null
+  );
+  const [revenueChartData, setRevenueChartData] = useState<RevenueChartData[]>(
+    []
+  );
+  const [loading, setLoading] = useState(true);
+  const { user, profile } = useAuth();
+  const { toast } = useToast();
+
+  // Fetch analytics data
+  const fetchAnalyticsData = async () => {
+    try {
+      setLoading(true);
+      const currentDate = new Date();
+      const currentMonth = currentDate.getMonth() + 1;
+      const currentYear = currentDate.getFullYear();
+
+      // Fetch summary data
+      const summaryResponse = await analyticsApi.getSummary({
+        month: currentMonth,
+        year: currentYear,
+      });
+
+      // Fetch revenue chart data
+      const chartResponse = await analyticsApi.getRevenueChart({
+        months: 6,
+        year: currentYear,
+      });
+
+      setAnalyticsData(summaryResponse.data);
+      setRevenueChartData(chartResponse.data);
+    } catch (error) {
+      console.error("Error fetching analytics:", error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch analytics data",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAnalyticsData();
+  }, []);
+
+  if (loading) {
+    return (
+      <MainLayout>
+        <div className="flex justify-center items-center min-h-screen">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-parking-primary"></div>
+        </div>
+      </MainLayout>
+    );
+  }
+
+  if (!user) {
+    return (
+      <MainLayout>
+        <div className="max-w-4xl mx-auto px-4 py-8">
+          <div className="text-center">
+            <p className="text-red-500">Authentication required</p>
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
+
+  const company = {
+    name:
+      profile?.company_name ||
+      user?.company_name ||
+      user?.fullName ||
+      "Company",
+    email: profile?.email || user?.email || "",
+    phone: "+234 812 345 6789", // These fields might need to be added to the API response
+    address: "15 Unity Road, Ilorin, Nigeria",
+    logo: "",
+    joinDate: new Date().toISOString(), // Default to current date
+  };
+
+  // Prepare occupancy data for pie chart
+  const occupancyData = analyticsData
+    ? [
+        { name: "Occupied", value: analyticsData.occupancy.occupiedSpots },
+        { name: "Available", value: analyticsData.occupancy.availableSpots },
+      ]
+    : [];
+
+  // Transform revenue data for charts (convert from kobo to naira)
+  const transformedRevenueData = revenueChartData.map((item) => ({
+    ...item,
+    amount: item.revenue / 100, // Convert from kobo to naira
+  }));
+
+  const transformedBookingData = revenueChartData.map((item) => ({
+    name: item.month,
+    bookings: item.bookings,
+  }));
+
   return (
     <MainLayout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">Company Dashboard</h1>
+          <h1 className="text-3xl font-bold text-gray-900">
+            Company Dashboard
+          </h1>
           <div className="flex items-center gap-2">
             <Avatar className="h-9 w-9">
               <AvatarImage src={company.logo} alt={company.name} />
@@ -73,7 +197,11 @@ const CompanyDashboard = () => {
           </div>
         </div>
 
-        <Tabs defaultValue="analytics" className="space-y-6" onValueChange={setActiveTab}>
+        <Tabs
+          defaultValue="analytics"
+          className="space-y-6"
+          onValueChange={setActiveTab}
+        >
           <TabsList className="grid grid-cols-4 mb-6">
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
             <TabsTrigger value="parking-spaces">Parking Spaces</TabsTrigger>
@@ -90,59 +218,141 @@ const CompanyDashboard = () => {
                   <CardDescription>This Month</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">₦34,000</div>
-                  <p className="text-xs text-green-500 flex items-center">
-                    <span>↑ 8.2% from last month</span>
+                  <div className="text-2xl font-bold">
+                    ₦
+                    {analyticsData
+                      ? (
+                          analyticsData.currentMonth.revenue.total / 100
+                        ).toLocaleString()
+                      : "0"}
+                  </div>
+                  <p
+                    className={`text-xs flex items-center ${
+                      analyticsData &&
+                      analyticsData.currentMonth.revenue.growthPercentage >= 0
+                        ? "text-green-500"
+                        : "text-red-500"
+                    }`}
+                  >
+                    <span>
+                      {analyticsData &&
+                      analyticsData.currentMonth.revenue.growthPercentage >= 0
+                        ? "↑"
+                        : "↓"}{" "}
+                      {analyticsData
+                        ? Math.abs(
+                            analyticsData.currentMonth.revenue.growthPercentage
+                          ).toFixed(1)
+                        : "0"}
+                      % from last month
+                    </span>
                   </p>
-                  
+
                   <div className="h-[100px] mt-4">
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={revenueData}>
+                      <BarChart data={transformedRevenueData}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                        <XAxis dataKey="name" fontSize={10} tickLine={false} axisLine={false} />
-                        <Tooltip />
-                        <Bar dataKey="amount" fill="#9b87f5" radius={[4, 4, 0, 0]} />
+                        <XAxis
+                          dataKey="month"
+                          fontSize={10}
+                          tickLine={false}
+                          axisLine={false}
+                        />
+                        <Tooltip
+                          formatter={(value) => [
+                            `₦${Number(value).toLocaleString()}`,
+                            "Revenue",
+                          ]}
+                        />
+                        <Bar
+                          dataKey="amount"
+                          fill="#9b87f5"
+                          radius={[4, 4, 0, 0]}
+                        />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
                 </CardContent>
               </Card>
-              
+
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-base">Total Bookings</CardTitle>
                   <CardDescription>This Month</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">217</div>
-                  <p className="text-xs text-green-500 flex items-center">
-                    <span>↑ 5.9% from last month</span>
+                  <div className="text-2xl font-bold">
+                    {analyticsData
+                      ? analyticsData.currentMonth.bookings.total
+                      : "0"}
+                  </div>
+                  <p
+                    className={`text-xs flex items-center ${
+                      analyticsData &&
+                      analyticsData.currentMonth.bookings.growthPercentage >= 0
+                        ? "text-green-500"
+                        : "text-red-500"
+                    }`}
+                  >
+                    <span>
+                      {analyticsData &&
+                      analyticsData.currentMonth.bookings.growthPercentage >= 0
+                        ? "↑"
+                        : "↓"}{" "}
+                      {analyticsData
+                        ? Math.abs(
+                            analyticsData.currentMonth.bookings.growthPercentage
+                          ).toFixed(1)
+                        : "0"}
+                      % from last month
+                    </span>
                   </p>
-                  
+
                   <div className="h-[100px] mt-4">
                     <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={bookingData}>
+                      <LineChart data={transformedBookingData}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                        <XAxis dataKey="name" fontSize={10} tickLine={false} axisLine={false} />
+                        <XAxis
+                          dataKey="name"
+                          fontSize={10}
+                          tickLine={false}
+                          axisLine={false}
+                        />
                         <Tooltip />
-                        <Line type="monotone" dataKey="bookings" stroke="#1EAEDB" strokeWidth={2} dot={{ r: 3 }} />
+                        <Line
+                          type="monotone"
+                          dataKey="bookings"
+                          stroke="#1EAEDB"
+                          strokeWidth={2}
+                          dot={{ r: 3 }}
+                        />
                       </LineChart>
                     </ResponsiveContainer>
                   </div>
                 </CardContent>
               </Card>
-              
+
               <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-base">Current Occupancy</CardTitle>
                   <CardDescription>Live Status</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">75%</div>
+                  <div className="text-2xl font-bold">
+                    {analyticsData
+                      ? analyticsData.occupancy.occupancyPercentage
+                      : "0"}
+                    %
+                  </div>
                   <p className="text-xs text-gray-500 flex items-center">
-                    <span>25% spaces available</span>
+                    <span>
+                      {analyticsData
+                        ? analyticsData.occupancy.availableSpots
+                        : "0"}{" "}
+                      spaces available
+                    </span>
                   </p>
-                  
+
                   <div className="h-[100px] mt-4 flex justify-center">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
@@ -157,7 +367,10 @@ const CompanyDashboard = () => {
                           dataKey="value"
                         >
                           {occupancyData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                            <Cell
+                              key={`cell-${index}`}
+                              fill={COLORS[index % COLORS.length]}
+                            />
                           ))}
                         </Pie>
                         <Tooltip />
@@ -167,7 +380,7 @@ const CompanyDashboard = () => {
                 </CardContent>
               </Card>
             </div>
-            
+
             <Card>
               <CardHeader>
                 <CardTitle>Monthly Revenue Overview</CardTitle>
@@ -176,7 +389,7 @@ const CompanyDashboard = () => {
                 <div className="h-[300px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart
-                      data={revenueData}
+                      data={transformedRevenueData}
                       margin={{
                         top: 5,
                         right: 30,
@@ -185,9 +398,14 @@ const CompanyDashboard = () => {
                       }}
                     >
                       <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" />
+                      <XAxis dataKey="month" />
                       <YAxis />
-                      <Tooltip />
+                      <Tooltip
+                        formatter={(value) => [
+                          `₦${Number(value).toLocaleString()}`,
+                          "Revenue",
+                        ]}
+                      />
                       <Legend />
                       <Bar dataKey="amount" name="Revenue (₦)" fill="#9b87f5" />
                     </BarChart>

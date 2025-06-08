@@ -8,10 +8,25 @@ import { CheckCircle, CreditCard, MapPin, Clock, Car } from "lucide-react";
 import { format } from "date-fns";
 import { paymentsApi } from "@/utils/api";
 import { usePaystackPayment } from "@/utils/paystack";
+import { useAuth } from "@/hooks/useAuth";
+
+interface PaystackPopup {
+  setup: (config: {
+    key: string;
+    email: string;
+    amount: number;
+    ref: string;
+    metadata?: Record<string, unknown>;
+    callback: (response: { reference: string }) => void;
+    onClose: () => void;
+  }) => {
+    openIframe: () => void;
+  };
+}
 
 declare global {
   interface Window {
-    PaystackPop: any;
+    PaystackPop: PaystackPopup;
   }
 }
 
@@ -25,6 +40,7 @@ const Checkout = () => {
   const { id } = useParams<{ id: string }>();
   const { toast } = useToast();
   const { initiatePayment } = usePaystackPayment();
+  const { userData } = useAuth();
 
   const {
     timeSlot,
@@ -35,23 +51,13 @@ const Checkout = () => {
     amount,
   } = location.state || {};
 
-  // Debug logging
-  console.log("Checkout data:", {
-    timeSlot,
-    paymentReference,
-    assignedSpot,
-    carDetails,
-    parkingLot,
-    amount,
-  });
-
   useEffect(() => {
     // Load Paystack script when component mounts
     const script = document.createElement("script");
     script.src = "https://js.paystack.co/v1/inline.js";
     script.async = true;
     script.onload = () => {
-      console.log("Paystack script loaded successfully");
+      // console.log("Paystack script loaded successfully");
     };
     script.onerror = () => {
       toast({
@@ -117,13 +123,12 @@ const Checkout = () => {
   };
 
   const handlePayment = () => {
-    console.log("handlePayment called");
-    console.log("Payment data:", { amount, paymentReference });
+    // console.log("handlePayment called");
 
     setPaymentStatus("processing");
 
     const success = initiatePayment({
-      email: localStorage.getItem("email") || "user@example.com",
+      email: userData?.email || "user@example.com",
       amount: amount, // Amount in kobo
       reference: paymentReference,
       metadata: {
@@ -132,7 +137,6 @@ const Checkout = () => {
         spotNumber: assignedSpot,
       },
       onSuccess: (reference: string) => {
-        console.log("Payment successful:", reference);
         verifyPayment(reference);
       },
       onCancel: () => {
@@ -341,7 +345,9 @@ const Checkout = () => {
                     <Button
                       onClick={handlePayment}
                       className="w-full"
-                      disabled={paymentStatus === "processing"}
+                      disabled={
+                        paymentStatus === "pending" || verificationLoading
+                      }
                     >
                       Pay with Paystack
                     </Button>

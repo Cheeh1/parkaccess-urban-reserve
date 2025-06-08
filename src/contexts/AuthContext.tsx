@@ -36,7 +36,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const fetchUserProfile = async (token: string) => {
     try {
       const baseUrl = getApiBaseUrl();
-      const response = await fetch(`${baseUrl}/auth/profile`, {
+      const response = await fetch(`${baseUrl}/auth/me`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -136,7 +136,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const result = await response.json();
 
       // Don't auto-login after signup, let them verify email first
-      console.log("Registration successful:", result);
+      // console.log("Registration successful:", result);
     } catch (error) {
       console.error("Signup error:", error);
       throw error;

@@ -1,14 +1,10 @@
 const API_BASE_URL =
-  import.meta.env.VITE_BASE_URL ||
-  import.meta.env.VITE_PUBLIC_BASE_URL ||
-  "http://localhost:5000/api";
+  import.meta.env.VITE_BASE_URL
 
 // Helper function to get API base URL
 export const getApiBaseUrl = () => {
   return (
-    import.meta.env.VITE_BASE_URL ||
-    import.meta.env.VITE_PUBLIC_BASE_URL ||
-    "http://localhost:5000/api"
+    import.meta.env.VITE_BASE_URL
   );
 };
 

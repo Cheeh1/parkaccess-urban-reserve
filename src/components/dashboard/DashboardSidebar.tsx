@@ -32,7 +32,7 @@ const DashboardSidebar = ({ user, activeTab, setActiveTab }: DashboardSidebarPro
     });
 
     // Redirect to login page
-    navigate('/login');
+    navigate('/');
   };
 
   return (

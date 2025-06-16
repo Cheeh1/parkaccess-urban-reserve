@@ -36,10 +36,10 @@ const CompanyProfile = ({ company }: CompanyProfileProps) => {
     name: userData?.fullName || company.name,
     email: userData?.email || company.email,
     phone: company.phone,
-    address: company.address,
-    description:
-      "We provide premium parking solutions for businesses and public areas across the city.",
-    taxId: "TAX-123456789",
+    // address: company.address,
+    // description:
+    //   "We provide premium parking solutions for businesses and public areas across the city.",
+    // taxId: "TAX-123456789",
   });
 
   const {
@@ -177,7 +177,7 @@ const CompanyProfile = ({ company }: CompanyProfileProps) => {
                   </div>
                 </div>
 
-                <div className="space-y-2">
+                {/* <div className="space-y-2">
                   <Label htmlFor="address">Address</Label>
                   <Input
                     id="address"
@@ -185,9 +185,9 @@ const CompanyProfile = ({ company }: CompanyProfileProps) => {
                     value={formData.address}
                     onChange={handleChange}
                   />
-                </div>
+                </div> */}
 
-                <div className="space-y-2">
+                {/* <div className="space-y-2">
                   <Label htmlFor="description">Company Description</Label>
                   <Textarea
                     id="description"
@@ -196,7 +196,7 @@ const CompanyProfile = ({ company }: CompanyProfileProps) => {
                     value={formData.description}
                     onChange={handleChange}
                   />
-                </div>
+                </div> */}
 
                 <div className="flex justify-end">
                   <Button type="submit">Save Changes</Button>

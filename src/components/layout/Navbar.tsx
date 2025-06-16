@@ -13,7 +13,7 @@ import {
 
 const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { user, profile, signOut, loading } = useAuth();
+  const { user, profile, signOut, loading, setUser, setProfile } = useAuth();
   const navigate = useNavigate();
 
   const isLoggedIn = !!user && !loading;
@@ -24,6 +24,9 @@ const Navbar = () => {
 
   const handleSignOut = async () => {
     try {
+      setIsMobileMenuOpen(false);
+      setUser(null);
+      setProfile(null);
       await signOut();
       navigate("/");
     } catch (error) {

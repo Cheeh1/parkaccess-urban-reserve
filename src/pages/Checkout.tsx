@@ -346,7 +346,7 @@ const Checkout = () => {
                       onClick={handlePayment}
                       className="w-full"
                       disabled={
-                        paymentStatus === "pending" || verificationLoading
+                        paymentStatus === "processing" || verificationLoading
                       }
                     >
                       Pay with Paystack

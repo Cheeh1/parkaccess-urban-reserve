@@ -61,7 +61,7 @@ const ParkingSpaces = () => {
       setIsLoading(true);
       const token = localStorage.getItem("token");
       const baseUrl = getApiBaseUrl();
-      const response = await fetch(`${baseUrl}/parking-lots`, {
+      const response = await fetch(`${baseUrl}/parking-lots/my-lots`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

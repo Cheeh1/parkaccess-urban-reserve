@@ -69,7 +69,9 @@ const CompanyProfile = ({ company }: CompanyProfileProps) => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          fullName: formData.name,
+        }),
       });
 
       if (!response.ok) {

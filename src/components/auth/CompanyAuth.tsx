@@ -39,7 +39,7 @@ const CompanyAuth = () => {
             <p className="text-sm text-gray-600">
               Already have a company account?{" "}
               <Link
-                to="/company-login"
+                to="/login"
                 className="text-parking-secondary hover:text-parking-primary font-medium"
               >
                 Log in

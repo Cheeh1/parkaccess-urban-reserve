@@ -39,6 +39,30 @@ const apiCall = async (endpoint: string, options: RequestInit = {}) => {
   return response.json();
 };
 
+// Generic API call function without auth (for public endpoints)
+const publicApiCall = async (endpoint: string, options: RequestInit = {}) => {
+  const url = `${API_BASE_URL}${endpoint}`;
+  const config: RequestInit = {
+    headers: {
+      "Content-Type": "application/json",
+    },
+    ...options,
+  };
+
+  const response = await fetch(url, config);
+
+  if (!response.ok) {
+    const errorData = await response
+      .json()
+      .catch(() => ({ message: "Unknown error" }));
+    throw new Error(
+      errorData.message || `HTTP ${response.status}: ${response.statusText}`
+    );
+  }
+
+  return response.json();
+};
+
 // Time slots API
 export const timeSlotApi = {
   getAvailable: (parkingLotId: string, date: string) =>
@@ -96,6 +120,10 @@ export const timeSlotApi = {
       `/time-slots/company/history${queryString ? `?${queryString}` : ""}`
     );
   },
+
+  // Get individual ticket/booking data (public endpoint for QR codes)
+  getTicket: (bookingId: string) =>
+    publicApiCall(`/time-slots/ticket/${bookingId}`),
 
   cancel: (bookingId: string) =>
     apiCall(`/time-slots/${bookingId}/cancel`, {

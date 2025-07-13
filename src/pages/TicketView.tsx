@@ -14,6 +14,7 @@ import {
   AlertCircle,
   XCircle,
 } from "lucide-react";
+import { timeSlotApi } from "@/utils/api";
 
 interface BookingHistory {
   _id: string;
@@ -50,21 +51,20 @@ const TicketView = () => {
           throw new Error("Ticket ID is required");
         }
 
-        // This would normally be an API call
-        // For now, simulating with localStorage or a mock API
-        const response = await fetch(`/api/booking/${id}`);
-
-        if (!response.ok) {
+        // Use the new API endpoint
+        const result = await timeSlotApi.getTicket(id);
+        
+        if (!result.success || !result.data) {
           throw new Error("Ticket not found");
         }
 
-        const ticketData = await response.json();
+        const ticketData = result.data;
 
         // Calculate time status
         const now = new Date();
         const startTime = new Date(ticketData.startTime);
         const endTime = new Date(ticketData.endTime);
-
+        
         let timeStatus: "upcoming" | "past" | "ongoing";
         if (now < startTime) {
           timeStatus = "upcoming";
@@ -146,8 +146,7 @@ const TicketView = () => {
   }
 
   const duration = Math.round(
-    (new Date(ticket.endTime).getTime() -
-      new Date(ticket.startTime).getTime()) /
+    (new Date(ticket.endTime).getTime() - new Date(ticket.startTime).getTime()) /
       (1000 * 60 * 60)
   );
 
@@ -157,9 +156,7 @@ const TicketView = () => {
         <div className="space-y-6">
           {/* Header */}
           <div className="text-center">
-            <h1 className="text-3xl font-bold text-blue-600 mb-2">
-              ParkAccess
-            </h1>
+            <h1 className="text-3xl font-bold text-blue-600 mb-2">ParkAccess</h1>
             <h2 className="text-xl font-semibold text-gray-900 mb-2">
               Parking E-Ticket
             </h2>
@@ -174,8 +171,7 @@ const TicketView = () => {
             <Alert className="bg-green-50 border-green-200">
               <CheckCircle className="h-4 w-4 text-green-600" />
               <AlertDescription className="text-green-800">
-                Your parking session is currently active. Please ensure your
-                vehicle is parked in the designated spot.
+                Your parking session is currently active. Please ensure your vehicle is parked in the designated spot.
               </AlertDescription>
             </Alert>
           )}
@@ -184,8 +180,7 @@ const TicketView = () => {
             <Alert className="bg-red-50 border-red-200">
               <XCircle className="h-4 w-4 text-red-600" />
               <AlertDescription className="text-red-800">
-                This parking session has expired. Please ensure your vehicle has
-                been removed from the parking spot.
+                This parking session has expired. Please ensure your vehicle has been removed from the parking spot.
               </AlertDescription>
             </Alert>
           )}
@@ -194,9 +189,7 @@ const TicketView = () => {
             <Alert className="bg-blue-50 border-blue-200">
               <Clock className="h-4 w-4 text-blue-600" />
               <AlertDescription className="text-blue-800">
-                Your parking session is scheduled to begin at{" "}
-                {format(new Date(ticket.startTime), "h:mm a")}. Please arrive on
-                time.
+                Your parking session is scheduled to begin at {format(new Date(ticket.startTime), "h:mm a")}. Please arrive on time.
               </AlertDescription>
             </Alert>
           )}
@@ -285,7 +278,9 @@ const TicketView = () => {
           {/* Footer */}
           <div className="text-center text-sm text-gray-500 pt-4 border-t">
             <p>This is your official parking ticket.</p>
-            <p className="mt-1">Generated on {format(new Date(), "PPpp")}</p>
+            <p className="mt-1">
+              Generated on {format(new Date(), "PPpp")}
+            </p>
           </div>
         </div>
       </div>

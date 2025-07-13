@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -17,8 +18,11 @@ import {
   Download,
   Printer,
   CheckCircle,
+  XCircle,
+  AlertCircle,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import QRCode from "qrcode";
 
 interface BookingHistory {
   _id: string;
@@ -50,6 +54,62 @@ interface ETicketProps {
 
 const ETicket = ({ booking, isOpen, onClose }: ETicketProps) => {
   const { toast } = useToast();
+  const [qrCodeUrl, setQrCodeUrl] = useState<string>("");
+
+  useEffect(() => {
+    if (booking) {
+      generateQRCode();
+    }
+  }, [booking]);
+
+  const generateQRCode = async () => {
+    if (!booking) return;
+
+    try {
+      const ticketUrl = `${window.location.origin}/ticket/${booking._id}`;
+      const qrCodeDataUrl = await QRCode.toDataURL(ticketUrl, {
+        width: 150,
+        margin: 2,
+        color: {
+          dark: "#000000",
+          light: "#FFFFFF",
+        },
+      });
+      setQrCodeUrl(qrCodeDataUrl);
+    } catch (error) {
+      console.error("Error generating QR code:", error);
+    }
+  };
+
+  const getStatusBadge = (status: "upcoming" | "past" | "ongoing") => {
+    const statusConfig = {
+      upcoming: {
+        color: "bg-blue-100 text-blue-800",
+        icon: Clock,
+        label: "Upcoming",
+      },
+      ongoing: {
+        color: "bg-green-100 text-green-800",
+        icon: CheckCircle,
+        label: "Active",
+      },
+      past: {
+        color: "bg-gray-100 text-gray-800",
+        icon: XCircle,
+        label: "Expired",
+      },
+    };
+
+    const config = statusConfig[status];
+    const Icon = config.icon;
+
+    return (
+      <Badge className={`${config.color} flex items-center gap-1`}>
+        <Icon className="h-3 w-3" />
+        {config.label}
+      </Badge>
+    );
+  };
 
   if (!booking) return null;
 
@@ -135,12 +195,27 @@ const ETicket = ({ booking, isOpen, onClose }: ETicketProps) => {
   };
 
   const generateTicketHTML = () => {
+    const statusConfig = {
+      upcoming: { color: "#dbeafe", textColor: "#1e40af" },
+      ongoing: { color: "#dcfce7", textColor: "#166534" },
+      past: { color: "#f3f4f6", textColor: "#374151" },
+    };
+
+    const config = statusConfig[booking.timeStatus];
+
     return `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; line-height: 1.6;">
         <div style="text-align: center; border-bottom: 2px solid #3b82f6; padding-bottom: 20px; margin-bottom: 30px;">
           <div style="font-size: 24px; font-weight: bold; color: #3b82f6; margin-bottom: 10px;">ParkAccess</div>
           <h2 style="margin: 10px 0;">Parking E-Ticket</h2>
           <p style="margin: 5px 0;">Booking ID: ${booking._id}</p>
+          <div style="margin: 10px 0;">
+            <span style="display: inline-block; padding: 5px 15px; border-radius: 20px; font-size: 12px; font-weight: bold; text-transform: uppercase; background: ${
+              config.color
+            }; color: ${config.textColor};">
+              ${booking.timeStatus}
+            </span>
+          </div>
         </div>
 
         <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
@@ -171,18 +246,8 @@ const ETicket = ({ booking, isOpen, onClose }: ETicketProps) => {
             <div>
               <div style="font-weight: bold; color: #374151; margin-bottom: 5px;">Status</div>
               <div style="display: inline-block; padding: 5px 15px; border-radius: 20px; font-size: 12px; font-weight: bold; text-transform: uppercase; background: ${
-                booking.timeStatus === "upcoming"
-                  ? "#dbeafe"
-                  : booking.timeStatus === "ongoing"
-                  ? "#dcfce7"
-                  : "#f3f4f6"
-              }; color: ${
-      booking.timeStatus === "upcoming"
-        ? "#1e40af"
-        : booking.timeStatus === "ongoing"
-        ? "#166534"
-        : "#374151"
-    };">${booking.timeStatus}</div>
+                config.color
+              }; color: ${config.textColor};">${booking.timeStatus}</div>
             </div>
           </div>
 
@@ -210,8 +275,9 @@ const ETicket = ({ booking, isOpen, onClose }: ETicketProps) => {
             </div>
           </div>
 
-          <div style="width: 100px; height: 100px; border: 2px dashed #d1d5db; margin: 20px auto; display: flex; align-items: center; justify-content: center; color: #9ca3af;">
-            QR Code
+          <div style="text-align: center; margin: 20px 0;">
+            <div style="font-weight: bold; color: #374151; margin-bottom: 10px;">Scan QR Code for Ticket Details</div>
+            <img src="${qrCodeUrl}" alt="QR Code" style="max-width: 150px; height: auto; border: 1px solid #e5e7eb; padding: 10px; background: white;" />
           </div>
         </div>
 
@@ -244,6 +310,9 @@ const ETicket = ({ booking, isOpen, onClose }: ETicketProps) => {
           <div className="text-center border-b pb-4">
             <h2 className="text-2xl font-bold text-blue-600">ParkAccess</h2>
             <p className="text-gray-600">Booking ID: {booking._id}</p>
+            <div className="mt-2 flex justify-center">
+              {getStatusBadge(booking.timeStatus)}
+            </div>
           </div>
 
           {/* Main Info */}
@@ -328,13 +397,26 @@ const ETicket = ({ booking, isOpen, onClose }: ETicketProps) => {
             </CardContent>
           </Card>
 
-          {/* QR Code Placeholder */}
+          {/* QR Code */}
           <div className="text-center">
-            <div className="w-24 h-24 border-2 border-dashed border-gray-300 mx-auto flex items-center justify-center text-gray-400 text-sm">
-              QR Code
-            </div>
+            <h3 className="font-medium mb-3">
+              Scan QR Code for Ticket Details
+            </h3>
+            {qrCodeUrl ? (
+              <div className="flex justify-center">
+                <img
+                  src={qrCodeUrl}
+                  alt="Ticket QR Code"
+                  className="w-32 h-32 border-2 border-gray-200 rounded-lg p-2 bg-white"
+                />
+              </div>
+            ) : (
+              <div className="w-32 h-32 border-2 border-dashed border-gray-300 mx-auto flex items-center justify-center text-gray-400 text-sm">
+                Generating QR...
+              </div>
+            )}
             <p className="text-xs text-gray-500 mt-2">
-              Show this QR code for quick entry/exit
+              Show this QR code for quick entry/exit verification
             </p>
           </div>
 

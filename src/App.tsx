@@ -15,6 +15,7 @@ import SignUp from "./pages/SignUp";
 import Dashboard from "./pages/Dashboard";
 import CompanyDashboard from "./pages/CompanyDashboard";
 import Checkout from "./pages/Checkout";
+import TicketView from "./pages/TicketView";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,6 +33,7 @@ const App = () => {
                 {/* Public routes - accessible to everyone */}
                 <Route path="/" element={<Index />} />
                 <Route path="/parking-lots" element={<ParkingLots />} />
+                <Route path="/ticket/:id" element={<TicketView />} />
 
                 {/* Auth routes - redirect if already authenticated */}
                 <Route

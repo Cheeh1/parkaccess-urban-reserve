@@ -35,6 +35,7 @@ const ParkingLots = () => {
   const [searchParams] = useSearchParams();
 
   const [location, setLocation] = useState(searchParams.get("location") || "");
+  const [name, setName] = useState(searchParams.get("name") || "");
   const [date, setDate] = useState(searchParams.get("date") || "");
   const [entryTime, setEntryTime] = useState(
     searchParams.get("entryTime") || ""
@@ -50,6 +51,7 @@ const ParkingLots = () => {
 
   useEffect(() => {
     setLocation(searchParams.get("location") || "");
+    setName(searchParams.get("name") || "");
     setDate(searchParams.get("date") || "");
     setEntryTime(searchParams.get("entryTime") || "");
     setExitTime(searchParams.get("exitTime") || "");
@@ -59,6 +61,7 @@ const ParkingLots = () => {
   const searchParamsObject = useMemo(
     () => ({
       location,
+      name,
       date,
       entryTime,
       exitTime,
@@ -66,7 +69,16 @@ const ParkingLots = () => {
       maxPrice,
       trigger: searchTrigger,
     }),
-    [searchTrigger]
+    [
+      location,
+      name,
+      date,
+      entryTime,
+      exitTime,
+      minPrice,
+      maxPrice,
+      searchTrigger,
+    ]
   );
 
   const { parkingLots, loading, error } = useParkingLots(searchParamsObject);
@@ -77,7 +89,9 @@ const ParkingLots = () => {
     navigate(
       `/parking-lots?location=${encodeURIComponent(
         location
-      )}&date=${encodeURIComponent(date)}&entryTime=${encodeURIComponent(
+      )}&name=${encodeURIComponent(name)}&date=${encodeURIComponent(
+        date
+      )}&entryTime=${encodeURIComponent(
         entryTime
       )}&exitTime=${encodeURIComponent(exitTime)}`
     );
@@ -93,6 +107,8 @@ const ParkingLots = () => {
         <ParkingSearch
           location={location}
           setLocation={setLocation}
+          name={name}
+          setName={setName}
           date={date}
           setDate={setDate}
           entryTime={entryTime}

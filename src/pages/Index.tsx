@@ -1,13 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  Search,
-  Clock,
-  CreditCard,
-  ArrowRight,
-  MapPin,
-  Calendar,
-} from "lucide-react";
+import { Search, Clock, CreditCard, ArrowRight, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import MainLayout from "@/components/layout/MainLayout";
@@ -15,8 +8,7 @@ import { Input } from "@/components/ui/input";
 
 const Index = () => {
   const navigate = useNavigate();
-  const [location, setLocation] = useState("");
-  const [name, setName] = useState("");
+  const [query, setQuery] = useState("");
   const [date, setDate] = useState("");
   const [entryTime, setEntryTime] = useState("");
   const [exitTime, setExitTime] = useState("");
@@ -24,11 +16,9 @@ const Index = () => {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     navigate(
-      `/parking-lots?location=${encodeURIComponent(
-        location
-      )}&name=${encodeURIComponent(name)}&date=${encodeURIComponent(
-        date
-      )}&entryTime=${encodeURIComponent(
+      `/parking-lots?query=${encodeURIComponent(
+        query
+      )}&date=${encodeURIComponent(date)}&entryTime=${encodeURIComponent(
         entryTime
       )}&exitTime=${encodeURIComponent(exitTime)}`
     );
@@ -74,42 +64,24 @@ const Index = () => {
             <CardContent className="p-6">
               <form
                 onSubmit={handleSearch}
-                className="grid grid-cols-1 md:grid-cols-5 gap-4"
+                className="grid grid-cols-1 md:grid-cols-4 gap-4"
               >
                 <div className="space-y-2">
                   <label
-                    htmlFor="location"
-                    className="parking-label flex items-center gap-1"
-                  >
-                    <MapPin className="h-4 w-4" />
-                    Location
-                  </label>
-                  <Input
-                    id="location"
-                    type="text"
-                    placeholder="Enter address or landmark"
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                    className="parking-input"
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label
-                    htmlFor="name"
+                    htmlFor="query"
                     className="parking-label flex items-center gap-1"
                   >
                     <Search className="h-4 w-4" />
-                    Parking Lot Name
+                    Search Location or Parking Lot
                   </label>
                   <Input
-                    id="name"
+                    id="query"
                     type="text"
-                    placeholder="Search by parking lot name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Enter location or parking lot name"
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
                     className="parking-input"
+                    required
                   />
                 </div>
 
@@ -167,7 +139,7 @@ const Index = () => {
                   />
                 </div>
 
-                <div className="md:col-span-5 mt-2">
+                <div className="md:col-span-4 mt-2">
                   <Button
                     type="submit"
                     className="w-full bg-parking-secondary hover:bg-parking-primary h-12"

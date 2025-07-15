@@ -17,8 +17,7 @@ interface ParkingLot {
 }
 
 interface SearchParams {
-  location?: string;
-  name?: string;
+  query?: string;
   minPrice?: number;
   maxPrice?: number;
   date?: string;
@@ -38,9 +37,7 @@ export const useParkingLots = (searchParams: SearchParams) => {
         setLoading(true);
         const queryParams = new URLSearchParams();
 
-        if (searchParams.location)
-          queryParams.append("location", searchParams.location);
-        if (searchParams.name) queryParams.append("name", searchParams.name);
+        if (searchParams.query) queryParams.append("query", searchParams.query);
         if (searchParams.minPrice)
           queryParams.append("minPrice", searchParams.minPrice.toString());
         if (searchParams.maxPrice)

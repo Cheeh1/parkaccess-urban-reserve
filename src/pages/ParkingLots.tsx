@@ -34,8 +34,7 @@ const ParkingLots = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  const [location, setLocation] = useState(searchParams.get("location") || "");
-  const [name, setName] = useState(searchParams.get("name") || "");
+  const [query, setQuery] = useState(searchParams.get("query") || "");
   const [date, setDate] = useState(searchParams.get("date") || "");
   const [entryTime, setEntryTime] = useState(
     searchParams.get("entryTime") || ""
@@ -50,8 +49,7 @@ const ParkingLots = () => {
   const [searchTrigger, setSearchTrigger] = useState(0);
 
   useEffect(() => {
-    setLocation(searchParams.get("location") || "");
-    setName(searchParams.get("name") || "");
+    setQuery(searchParams.get("query") || "");
     setDate(searchParams.get("date") || "");
     setEntryTime(searchParams.get("entryTime") || "");
     setExitTime(searchParams.get("exitTime") || "");
@@ -60,8 +58,7 @@ const ParkingLots = () => {
 
   const searchParamsObject = useMemo(
     () => ({
-      location,
-      name,
+      query,
       date,
       entryTime,
       exitTime,
@@ -69,16 +66,7 @@ const ParkingLots = () => {
       maxPrice,
       trigger: searchTrigger,
     }),
-    [
-      location,
-      name,
-      date,
-      entryTime,
-      exitTime,
-      minPrice,
-      maxPrice,
-      searchTrigger,
-    ]
+    [query, date, entryTime, exitTime, minPrice, maxPrice, searchTrigger]
   );
 
   const { parkingLots, loading, error } = useParkingLots(searchParamsObject);
@@ -87,11 +75,9 @@ const ParkingLots = () => {
     e.preventDefault();
     setSearchTrigger((prev) => prev + 1);
     navigate(
-      `/parking-lots?location=${encodeURIComponent(
-        location
-      )}&name=${encodeURIComponent(name)}&date=${encodeURIComponent(
-        date
-      )}&entryTime=${encodeURIComponent(
+      `/parking-lots?query=${encodeURIComponent(
+        query
+      )}&date=${encodeURIComponent(date)}&entryTime=${encodeURIComponent(
         entryTime
       )}&exitTime=${encodeURIComponent(exitTime)}`
     );
@@ -105,10 +91,8 @@ const ParkingLots = () => {
     <MainLayout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <ParkingSearch
-          location={location}
-          setLocation={setLocation}
-          name={name}
-          setName={setName}
+          query={query}
+          setQuery={setQuery}
           date={date}
           setDate={setDate}
           entryTime={entryTime}
